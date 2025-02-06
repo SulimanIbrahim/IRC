@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include <cerrno>
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
     _running = false;
