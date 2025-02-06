@@ -2,8 +2,7 @@
 
 Parser::Parser(int ac, char **av) {
     if (ac != 3) {
-        std::cerr << "Usage: ./ircserv [port] [password]" << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("Error: Invalid number of arguments. Usage: ./server <port> <password>");
     }
     
     checkNonNumeric(av[1]);
@@ -21,23 +20,20 @@ Parser::~Parser() {}
 void Parser::checkNonNumeric(const char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         if (!isdigit(str[i])) {
-            std::cerr << "Error: Port must be numeric." << std::endl;
-            exit(EXIT_FAILURE);
+            throw std::runtime_error("Error: Port must be a number.");
         }
     }
 }
 
 void Parser::checkNegativeNumber(const char *str) {
     if (str[0] == '-') {
-        std::cerr << "Error: Port must be a positive number." << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("Error: Port must be a positive number.");
     }
 }
 
 void Parser::checkValidPort(int port) {
     if (port < 1024 || port > 49151) {
-        std::cerr << "Error: Port must be between 1024 and 49151." << std::endl;
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("Error: Port must be between 1024 and 49151.");
     }
 }
 

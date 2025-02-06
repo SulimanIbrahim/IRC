@@ -13,6 +13,7 @@
 
 
 #include "Parser.hpp"
+#include <fcntl.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -41,6 +42,7 @@ public:
     void setupSocket();
     void bindSocket();
     void listenSocket();
+    void acceptClinets();
     void stop();
 };
 
