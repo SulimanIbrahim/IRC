@@ -48,6 +48,7 @@ public:
     void listenSocket();
     void acceptClinets();
     void stop();
+    void CheckComands(std::string str);
     void readFromClients();
     // void writeToClient(Client client, std::string message);
 };

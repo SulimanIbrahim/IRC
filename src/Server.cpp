@@ -14,6 +14,15 @@ Server::~Server() {
         close(_serverSocket);
 }
 
+void Server::CheckComands(std::string str) {
+    std::vector<std::string> tokens = _parser.split(str, '\n');
+    for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
+    {
+        std::cout << *i << std::endl;
+        _parser.ParseComands(*i);
+    }
+}
+
 void Server::setupSocket() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket == -1) {
@@ -83,6 +92,7 @@ void Server::readFromClients() {
                 Clients.erase(it);
             } else {
                 // parse message and check if it is a command
+                CheckComands(buffer);
                 std::cout << "Received " << bytes << " bytes from client " << pfd.fd << std::endl;
                 std::cout << "Message: " << buffer << std::endl;
                 // write to client or broadcast to all clients in the same channel
