@@ -17,15 +17,16 @@
 class Channel {
 private:
     const std::string _ChannelName;
-    std::vector<Client> Clients;
+    std::vector<Client> _Clients;
 
 public:
     Channel(Client client, std::string ChannelName);
     ~Channel();
 
-    std::string addClient(Client client);
-    std::string kickClient(Client client);
+    std::string addClient(Client client, std::string clien_to_add, std::vector<Client> &Clients);
+    std::string kickClient(Client client, std::string clien_to_kick);
     void sendMessage(std::string message, Client &client);
+    std::string sendPrivateMessage(std::string message, Client &client, std::string to);
     std::string getChannelName();
     std::vector<Client> getClients();
 };

@@ -15,76 +15,29 @@ Server::~Server() {
 }
 
 std::string Server::ParseComands(std::string str, Client &client) {
-    if (str.empty()) {
-        return "";
-    }
     std::vector<std::string> tokens = _parser.split(str, ' ');
-    if (tokens.size() == 0) {
-        return "Invalid Syntax\n";
-    }
-    if (tokens[0] == "pass" && tokens.size() == 2) {
-        if (tokens[1] != _password) {
-            if (client.isPasswordEntered() == false) {
-                client.setPasswordEntered(true);
-                return "Password entered\n";
-            }
-            else {
-                return "Password is already entered\n";
-            }
-        }
-        return "Password is incorrect\n";
-    }
-    else if (tokens[0] == "nick" && tokens.size() == 2) {
-        // parse nickname and check if it already exists and if it is valid
-        if (client.get_nick() == tokens[1]) {
-            return "Nickname is already set to " + tokens[1] + "\n";
-        }
-        else if (tokens[1].size() > 9) {
-            return "Nickname is too long\n";
-        }
-        client.set_nick(tokens[1]);
-        return "Nickname: " + tokens[1] + "\n";
-        // set_nick(tokens[1]);
-    }
-    else if (tokens[0] == "user" && tokens.size() == 2) {
-        // parse username and check if it already exists and if it is valid
-        if (client.get_username() == tokens[1]) {
-            return "Username is already set to " + tokens[1] + "\n";
-        }
-        else if (tokens[1].size() > 9) {
-            return "Username is too long\n";
-        }
-        client.set_username(tokens[1]);
-        return "Username: " + tokens[1] + "\n";
-    }
-    else if (tokens[0] == "privmsg" && tokens.size() >= 3) {
-        // send a private message to the user token[1]
+    
+    if (tokens[0] == "pass" && tokens.size() == 2)
+        return _commands.Pass(client, tokens[1], _password);
+    
+    else if (tokens[0] == "nick" && tokens.size() == 2)
+        return _commands.Nick(client, tokens[1]);
+    
+    else if (tokens[0] == "user" && tokens.size() == 2)
+        return _commands.User(client, tokens[1]);
 
-        return "Private message sent to " + tokens[1] + "\n";
-    }
-    else if (tokens[0] == "join" && tokens.size() == 2) {
-        // join to a channel or create a new one
-        for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it)
-        {
-            if (it->getChannelName() == tokens[1])
-            {
-                it->addClient(client);
-                client.setChannel(tokens[1]);
-                return "Joined channel " + tokens[1] + "\n";
-            }
-        }
-        Channels.push_back(Channel(client, tokens[1]));
-        client.setChannel(tokens[1]);
-        return "Created and joined channel " + tokens[1] + "\n";
-    }
-    else if (tokens[0] == "kick" && tokens.size() == 2) {
-        // kick a user from a channel
-        return "Kicked user " + tokens[1] + " from channel\n";
-    }
-    else if (tokens[0] == "invite" && tokens.size() == 3) {
-        // invite a user to a channel
-        return "Invited user " + tokens[1] + " to channel " + tokens[2] + "\n";
-    }
+    else if (tokens[0] == "privmsg" && tokens.size() >= 3)
+        return _commands.Privmsg(client, tokens[1], tokens[2], Channels);
+
+    else if (tokens[0] == "join" && tokens.size() == 2)
+        return _commands.Join(client, tokens[1], Channels, Clients);
+
+    else if (tokens[0] == "kick" && tokens.size() == 3)
+        return _commands.Kick(client, tokens[1], tokens[2], Channels);
+
+    else if (tokens[0] == "invite" && tokens.size() == 3)
+        // return _commands.Invite(client, tokens[1], tokens[2], Channels);
+        return "Invite command not implemented, yet...\n";
     return "Invalid Syntax\n";
 }
 

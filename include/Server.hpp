@@ -12,6 +12,7 @@
 
 
 #include "Client.hpp"
+#include "Commands.hpp"
 #include "Channel.hpp"
 #include "Parser.hpp"
 #include <fcntl.h>
@@ -37,6 +38,7 @@ private:
     std::vector<Channel> Channels;
     struct sockaddr_in _server_addr;
     Parser _parser;
+    Commands _commands;
 
 public:
     Server(int ac, char **av);
