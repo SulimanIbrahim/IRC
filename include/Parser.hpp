@@ -27,7 +27,6 @@ public:
     Parser(int ac, char **av);
     ~Parser();
 
-    void ParseComands(std::string str);
     std::vector<std::string> split(std::string str, char delimiter);
     int getPort() const;
     std::string getPassword() const;

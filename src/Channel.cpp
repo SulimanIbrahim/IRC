@@ -9,7 +9,7 @@ Channel::~Channel()
 {
 };
 
-void Channel::addClient(Client client)
+std::string Channel::addClient(Client client)
 {
     std::vector<Client>::iterator it = Clients.begin();
     for (; it != Clients.end(); ++it)
@@ -17,13 +17,24 @@ void Channel::addClient(Client client)
         if (it->get_nick() == client.get_nick())
             break;
     }
-    if (it == Clients.end())
+    if (it == Clients.end()) {
         Clients.push_back(client);
+        return client.get_username() + " has been added to channel " + _ChannelName + "\n";
+    }
     else
-        std::cout << "Client "<< client.get_username() << " already in channel " << _ChannelName << std::endl;
+        return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
 };
 
-void Channel::kickClient(Client client)
+void Channel::sendMessage(std::string message, Client &client)
+{
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it)
+    {
+        if (it->get_username() != client.get_username())
+            send(it->get_pfd().fd, message.c_str(), message.size(), 0);
+    }
+};
+
+std::string Channel::kickClient(Client client)
 {
     std::vector<Client>::iterator it = Clients.begin();
     for (; it != Clients.end(); ++it)
@@ -31,10 +42,12 @@ void Channel::kickClient(Client client)
         if (it->get_nick() == client.get_nick())
             break;
     }
-    if (it != Clients.end())
+    if (it != Clients.end()) {
         Clients.erase(it);
+        return client.get_username() + " has been kicked from channel " + _ChannelName + "\n";
+    }
     else
-        std::cout << "Client "<< client.get_username() << " not in channel " << _ChannelName << std::endl;
+        return "Client " + client.get_username() + " not found in channel " + _ChannelName + "\n";
 };
 
 std::string Channel::getChannelName()

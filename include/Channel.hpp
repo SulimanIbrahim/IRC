@@ -23,8 +23,9 @@ public:
     Channel(Client client, std::string ChannelName);
     ~Channel();
 
-    void addClient(Client client);
-    void kickClient(Client client);
+    std::string addClient(Client client);
+    std::string kickClient(Client client);
+    void sendMessage(std::string message, Client &client);
     std::string getChannelName();
     std::vector<Client> getClients();
 };

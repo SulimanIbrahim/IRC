@@ -54,43 +54,6 @@ std::vector<std::string> Parser::split(std::string str, char delimiter) {
     return tokens;
 }
 
-void Parser::ParseComands(std::string str) {
-    std::vector<std::string> tokens = split(str, ' ');
-    // for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
-    //     std::cout << *i << std::endl;
-    std::cout << "Parsing command: " << "(" + tokens[0] + ")" << "size: " << tokens.size() << std::endl;
-    if (tokens.size() == 0) {
-        return;
-    }
-    if (tokens[0] == "pass" && tokens.size() == 2) {
-        std::cout << "Password: " << tokens[1] << std::endl;
-        // check_password(tokens[1]);
-    }
-    else if (tokens[0] == "nick" && tokens.size() == 2) {
-        std::cout << "Nickname: " << tokens[1] << std::endl;
-        // set_nick(tokens[1]);
-    }
-    else if (tokens[0] == "user" && tokens.size() == 2) {
-        std::cout << "Username: " << tokens[1] << std::endl;
-        // set_username(tokens[1]);
-    }
-    else if (tokens[0] == "privmsg" && tokens.size() >= 3) {
-        // send a private message to the user token[1]
-    }
-    else if (tokens[0] == "join" && tokens.size() == 2) {
-        // join a channel
-    }
-    else if (tokens[0] == "kick" && tokens.size() == 2) {
-        // kick a user from a channel
-    }
-    else if (tokens[0] == "invite" && tokens.size() == 3) {
-        // invite a user to a channel
-    }
-    else {
-        std::cout << "Invalid Syntax " << str << std::endl;
-    }
-}
-
 int Parser::getPort() const {
     return _port;
 }
