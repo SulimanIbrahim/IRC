@@ -1,6 +1,7 @@
 #include "../include/Server.hpp"
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
+    banner = "Welcome to the IRC Server\n";
     _running = false;
     _port = _parser.getPort();  // Retrieve parsed port
     _password = _parser.getPassword();  // Retrieve parsed password
@@ -15,6 +16,8 @@ Server::~Server() {
 }
 
 std::string Server::ParseComands(std::string str, Client &client) {
+    if (str.empty())
+        return "";
     std::vector<std::string> tokens = _parser.split(str, ' ');
     
     if (tokens[0] == "pass" && tokens.size() == 2)
@@ -102,6 +105,7 @@ void Server::acceptClinets() {
         inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
         std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
         Clients.push_back(Client(client_fd));
+        send(client_fd, banner.c_str(), banner.size(), 0);
     }
 }
 

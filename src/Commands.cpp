@@ -7,16 +7,8 @@ Commands::~Commands() {
 
 }
 
-std::string Commands::Join(Client& client, std::string ChannelName) {
-    if (ChannelName == client.getChannel()) {
-        return "Already in channel " + ChannelName + "\n";
-    }
-    client.setChannel(ChannelName);
-    return "Joined channel " + ChannelName + "\n";
-}
-
 std::string Commands::Pass(Client& client, std::string enterd_password, std::string password) {
-    if (password != enterd_password) {
+    if (password == enterd_password) {
         if (client.isPasswordEntered() == false) {
             client.setPasswordEntered(true);
             return "Password entered\n";
@@ -56,14 +48,14 @@ std::string Commands::Privmsg(Client& client, std::string to, std::string messag
             return it->sendPrivateMessage(message, client, to);
         }
     }
-    return "You are not in a channel\n";
+    return "the channel " + client.getChannel() + " does not exist\n";
 }
 
 std::string Commands::Join(Client& client, std::string channel, std::vector<Channel>& Channels, std::vector<Client>& Clients) {
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == channel) {
             client.setChannel(channel);
-            return it->addClient(client, client.get_username(), Clients);
+            return it->inviteClient(client, client.get_username(), Clients);
         }
     }
     Channels.push_back(Channel(client, channel));
@@ -77,5 +69,5 @@ std::string Commands::Kick(Client& client, std::string username, std::string fro
             return it->kickClient(client, username);
         }
     }
-    return "You are not in a channel\n";
+    return "the channel " + from_channel + " does not exist\n";
 }

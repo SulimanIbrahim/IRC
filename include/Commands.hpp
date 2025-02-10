@@ -14,7 +14,6 @@ public:
     Commands();
     ~Commands();
 
-    static std::string Join(Client &client, std::string ChannelName);
     static std::string Pass(Client &client, std::string enterd_password, std::string password);
     static std::string Nick(Client &client, std::string nickname);
     static std::string User(Client &client, std::string username);

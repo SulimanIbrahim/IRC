@@ -7,7 +7,7 @@ Client::Client(int _clientSockets):password_entered(false), _username(""), _nick
 }
 Client::~Client()
 {
-
+    // close(_pfd.fd);
 }
 
 void Client::set_nick(std::string nickname)

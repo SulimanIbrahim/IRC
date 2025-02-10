@@ -30,6 +30,7 @@
 
 class Server {
 private:
+    std::string banner;
     bool _running;
     int _port;
     std::string _password;
