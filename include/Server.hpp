@@ -11,7 +11,9 @@
 #define CYAN "\033[36m"
 
 
-
+#include "Client.hpp"
+#include "Commands.hpp"
+#include "Channel.hpp"
 #include "Parser.hpp"
 #include <fcntl.h>
 #include <iostream>
@@ -23,16 +25,21 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
+#include <cerrno>
+#include <poll.h>
 
 class Server {
 private:
+    std::string banner;
     bool _running;
     int _port;
     std::string _password;
     int _serverSocket;
-    std::vector<int> _clientSockets;
+    std::vector<Client> Clients;
+    std::vector<Channel> Channels;
     struct sockaddr_in _server_addr;
     Parser _parser;
+    Commands _commands;
 
 public:
     Server(int ac, char **av);
@@ -44,6 +51,10 @@ public:
     void listenSocket();
     void acceptClinets();
     void stop();
+    std::string ParseComands(std::string str, Client &client);
+    void CheckComands(std::string str, Client &client);
+    void readFromClients();
+    // void writeToClient(Client client, std::string message);
 };
 
 #endif

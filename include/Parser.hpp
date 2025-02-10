@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <string>
 #include <cctype>
+#include <vector>
 #define RED "\033[31m"
 #define RESET "\033[0m"
 #define GREEN "\033[32m"
@@ -26,6 +27,7 @@ public:
     Parser(int ac, char **av);
     ~Parser();
 
+    std::vector<std::string> split(std::string str, char delimiter);
     int getPort() const;
     std::string getPassword() const;
 };

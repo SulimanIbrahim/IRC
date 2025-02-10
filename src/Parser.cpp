@@ -37,6 +37,23 @@ void Parser::checkValidPort(int port) {
     }
 }
 
+std::vector<std::string> Parser::split(std::string str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    for (unsigned int i = 0; i < str.size(); i++) {
+        if (str[i] == delimiter) {
+            tokens.push_back(token);
+            token.clear();
+        } else {
+            token += str[i];
+        }
+    }
+    if (!token.empty()) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 int Parser::getPort() const {
     return _port;
 }
