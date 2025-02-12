@@ -114,10 +114,11 @@ void Server::readFromClients() {
     if (Clients.empty()) {
         return;
     }
-    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+    std::vector<Client>::iterator it = Clients.begin();
+    while (it != Clients.end()) {
         char buffer[1024];
         bzero(buffer, 1024);
-        pfd = (*it).get_pfd();
+        pfd = it->get_pfd();
         poll(&pfd, 1, 0);
         if (pfd.revents & POLLIN) {
             int bytes = recv(pfd.fd, buffer, 1024, 0);
@@ -128,7 +129,8 @@ void Server::readFromClients() {
                     std::cout << "Failed to receive data from client" << std::endl;
                 }
                 close(pfd.fd);
-                Clients.erase(it);
+                it = Clients.erase(it);
+                continue;
             } else {
                 std::cout << "Received " << bytes << " bytes from client " << pfd.fd << std::endl;
                 // parse message and check if it is a command
@@ -136,6 +138,7 @@ void Server::readFromClients() {
                 // std::cout << "Message: " << buffer << std::endl;
             }
         }
+        ++it;
     }
 }
 
