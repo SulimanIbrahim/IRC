@@ -103,10 +103,6 @@ void Server::registerClientInQueue() {
         std::cerr << "checking before calling kevent Invalid client FD" << std::endl;
         return;
     }
-
-
-    std::cout << "Registering client FD: " << client_fd << std::endl;
-
     struct kevent event;
     EV_SET(&event, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 
