@@ -41,7 +41,7 @@ private:
     std::string _password;
     int _serverSocket;
     std::vector<Client> Clients;
-    std::vector<Channel> Channels;
+    std::vector<Channel> Channeils;
     struct sockaddr_in _server_addr;
     Parser _parser;
     Commands _commands;

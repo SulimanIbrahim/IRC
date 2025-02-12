@@ -10,6 +10,8 @@ Client::Client(int _clientSockets):password_entered(false), _username(""), _nick
 }
 Client::~Client()
 {
+    std::cout << "Client destructor" << std::endl;
+    std::cout << "Client Disconnected" << std::endl;
     // close(_fd);
 }
 

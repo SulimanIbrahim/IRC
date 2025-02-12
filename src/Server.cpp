@@ -31,13 +31,13 @@ std::string Server::ParseComands(std::string str, Client &client) {
         return _commands.User(client, tokens[1]);
 
     else if (tokens[0] == "privmsg" && tokens.size() >= 3)
-        return _commands.Privmsg(client, tokens[1], tokens[2], Channels);
+        return _commands.Privmsg(client, tokens[1], tokens[2], Channeils);
 
     else if (tokens[0] == "join" && tokens.size() == 2)
-        return _commands.Join(client, tokens[1], Channels, Clients);
+        return _commands.Join(client, tokens[1], Channeils, Clients);
 
     else if (tokens[0] == "kick" && tokens.size() == 3)
-        return _commands.Kick(client, tokens[1], tokens[2], Channels);
+        return _commands.Kick(client, tokens[1], tokens[2], Channeils);
 
     else if (tokens[0] == "invite" && tokens.size() == 3)
         // return _commands.Invite(client, tokens[1], tokens[2], Channels);
@@ -114,6 +114,7 @@ void Server::registerClientInQueue() {
         std::cerr << "kq_fd is not valid" << std::endl;
         return;
     }
+
     int result = kevent(kq_fd, &event, 1, NULL, 0, NULL);
     if (result == 0) {
         std::cout << "Client FD " << client_fd << " registered successfully" << std::endl;
@@ -133,15 +134,15 @@ void Server::acceptClients() {
         return;
     } else {
 
-    std::cout << "client_fd: " << client_fd << std::endl;
-    setNonBlocking(client_fd);
-    char ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
-    std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-    Clients.__emplace_back(client_fd);
-    std::cout << "FD of the clinet is : " << Clients.back().get_fd() << std::endl;
-    registerClientInQueue();
-    send(client_fd, banner.c_str(), banner.size(), 0);
+        std::cout << "client_fd: " << client_fd << std::endl;
+        setNonBlocking(client_fd);
+        char ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
+        std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
+        Clients.__emplace_back(client_fd);
+        std::cout << "FD of the clinet is : " << Clients.back().get_fd() << std::endl;
+        registerClientInQueue();
+        send(client_fd, banner.c_str(), banner.size(), 0);
     }
 }
 
