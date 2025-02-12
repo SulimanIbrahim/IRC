@@ -1,7 +1,8 @@
 #include "../include/Server.hpp"
+#include <algorithm>
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
-    banner = "Welcome to the IRC Server\n";
+    banner = "Welcome to the IRC Server\nType AUTH to start registration or HELP to see all commands\n";
     _running = false;
     _port = _parser.getPort();  // Retrieve parsed port
     _password = _parser.getPassword();  // Retrieve parsed password
@@ -20,28 +21,54 @@ std::string Server::ParseComands(std::string str, Client &client) {
         return "";
     std::vector<std::string> tokens = _parser.split(str, ' ');
     
-    if (tokens[0] == "pass" && tokens.size() == 2)
-        return _commands.Pass(client, tokens[1], _password);
-    
-    else if (tokens[0] == "nick" && tokens.size() == 2)
-        return _commands.Nick(client, tokens[1]);
-    
-    else if (tokens[0] == "user" && tokens.size() == 2)
-        return _commands.User(client, tokens[1]);
+    // Convert command to lowercase for case-insensitive comparison
+    std::string cmd = tokens[0];
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
-    else if (tokens[0] == "privmsg" && tokens.size() >= 3)
+    // Always allow AUTH, HELP and PASS commands
+    if (cmd == "auth")
+        return _commands.Auth();
+    if (cmd == "help")
+        return _commands.Help();
+    if (cmd == "pass")
+        return _commands.Pass(client, tokens, _password);
+
+    // Check authentication state for all other commands
+    if (!client.isPasswordEntered()) {
+        return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
+    }
+
+    // Check nickname requirement for commands after NICK
+    if (cmd != "nick" && client.get_nick().empty()) {
+        return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
+    }
+
+    // Check username requirement for commands after USER
+    if (cmd != "nick" && cmd != "user" && client.get_username().empty()) {
+        return "\033[1;31m✗ Error: You must set a username first (use USER command)\n\033[0m";
+    }
+
+    // Process commands
+    if (cmd == "nick")
+        return _commands.Nick(client, tokens);
+    
+    else if (cmd == "user")
+        return _commands.User(client, tokens);
+
+    else if (cmd == "privmsg" && tokens.size() >= 3)
         return _commands.Privmsg(client, tokens[1], tokens[2], Channels);
 
-    else if (tokens[0] == "join" && tokens.size() == 2)
+    else if (cmd == "join" && tokens.size() == 2)
         return _commands.Join(client, tokens[1], Channels, Clients);
 
-    else if (tokens[0] == "kick" && tokens.size() == 3)
+    else if (cmd == "kick" && tokens.size() == 3)
         return _commands.Kick(client, tokens[1], tokens[2], Channels);
 
-    else if (tokens[0] == "invite" && tokens.size() == 3)
+    else if (cmd == "invite" && tokens.size() == 3)
         // return _commands.Invite(client, tokens[1], tokens[2], Channels);
         return "Invite command not implemented, yet...\n";
-    return "Invalid Syntax\n";
+
+    return "\033[1;31m✗ Error: Invalid command. Type HELP to see available commands\n\033[0m";
 }
 
 void Server::CheckComands(std::string str, Client &client) {

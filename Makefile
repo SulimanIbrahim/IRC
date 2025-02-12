@@ -8,7 +8,12 @@ SRC= main.cpp \
 	 src/Parser.cpp \
 	 src/Channel.cpp \
 	 src/Client.cpp \
-	 src/Commands.cpp
+	 src/Commands.cpp\
+	 src/commands/auth.cpp\
+	 src/commands/help.cpp\
+	 src/commands/nick.cpp\
+	 src/commands/pass.cpp\
+	 src/commands/user.cpp
 
 OBJ= $(SRC:.cpp=.o)
 
