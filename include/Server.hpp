@@ -27,12 +27,17 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
+#include <sys/event.h>
+#include <sys/time.h>
 
 class Server {
 private:
     std::string banner;
     bool _running;
     int _port;
+    int kq_fd;
+    static const int MAX_EVENTS = 32;
+    static const int BUFFER_SIZE = 1024;
     std::string _password;
     int _serverSocket;
     std::vector<Client> Clients;
@@ -49,11 +54,20 @@ public:
     void setupSocket();
     void bindSocket();
     void listenSocket();
-    void acceptClinets();
+    void acceptClients();
+    void initKqueue();
+    void registerServerInQueue();
+    // void monitorClients();
+    void registerClientInQueue();
+    void handleEvents();
+    void handleClientMessage(Client &client);
+    void handleDisconnections();
+    void processMessage(Client &client, std::string message);
+    void setNonBlocking(int fd);
     void stop();
     std::string ParseComands(std::string str, Client &client);
     void CheckComands(std::string str, Client &client);
-    void readFromClients();
+    // void readFromClients();
     // void writeToClient(Client client, std::string message);
 };
 
