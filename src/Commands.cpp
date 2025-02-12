@@ -7,40 +7,6 @@ Commands::~Commands() {
 
 }
 
-std::string Commands::Pass(Client& client, std::string enterd_password, std::string password) {
-    if (password == enterd_password) {
-        if (client.isPasswordEntered() == false) {
-            client.setPasswordEntered(true);
-            return "Password entered\n";
-        }
-        else {
-            return "Password is already entered\n";
-        }
-    }
-    return "Password is incorrect\n";
-}
-
-std::string Commands::Nick(Client& client, std::string nickname) {
-    if (client.get_nick() == nickname) {
-        return "Nickname is already set to " + nickname + "\n";
-    }
-    else if (nickname.size() > 9) {
-        return "Nickname is too long\n";
-    }
-    client.set_nick(nickname);
-    return "Nickname: " + nickname + "\n";
-}
-
-std::string Commands::User(Client& client, std::string username) {
-    if (client.get_username() == username) {
-        return "Username is already set to " + username + "\n";
-    }
-    else if (username.size() > 9) {
-        return "Username is too long\n";
-    }
-    client.set_username(username);
-    return "Username: " + username + "\n";
-}
 
 std::string Commands::Privmsg(Client& client, std::string to, std::string message, std::vector<Channel>& Channels) {
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
