@@ -1,13 +1,18 @@
 #include "../include/Client.hpp"
 
 Client::Client(int _clientSockets):password_entered(false), _username(""), _nickname(""), at_channel("") {
-    _pfd.fd = _clientSockets;
-    _pfd.events = POLLIN;
-    _pfd.revents = 0;
+    std::cout << "Client constructor" << std::endl;
+    std::cout << "Client socket: " << _clientSockets << std::endl;
+    _fd = _clientSockets;
+    _username = "Client";
+    _nickname = "Client";
+    at_channel = "General";
 }
 Client::~Client()
 {
-    // close(_pfd.fd);
+    std::cout << "Client destructor" << std::endl;
+    std::cout << "Client Disconnected" << std::endl;
+    // close(_fd);
 }
 
 void Client::set_nick(std::string nickname)
@@ -31,9 +36,9 @@ std::string Client::getChannel()
     return at_channel;
 };
 
-pollfd Client::get_pfd()
+int Client::get_fd()
 {
-    return _pfd;
+    return _fd;
 };
 std::string Client::get_nick(){
     return _nickname;

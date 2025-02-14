@@ -36,7 +36,7 @@ void Channel::sendMessage(std::string message, Client &client)
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_username() != client.get_username())
-            send(it->get_pfd().fd, message.c_str(), message.size(), 0);
+            send(it->get_fd(), message.c_str(), message.size(), 0);
     }
 };
 
@@ -47,7 +47,7 @@ std::string Channel::sendPrivateMessage(std::string message, Client &client, std
     {
         if (it->get_username() == to)
         {
-            send(it->get_pfd().fd, message_to_send.c_str(), message.size(), 0);
+            send(it->get_fd(), message_to_send.c_str(), message.size(), 0);
             return "";
         }
     }
