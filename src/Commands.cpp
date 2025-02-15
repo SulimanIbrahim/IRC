@@ -1,15 +1,15 @@
 #include "../include/Commands.hpp"
 
-Commands::Commands() {
-}
 
 Commands::~Commands() {
 
 }
 
 
-std::string Commands::Privmsg(Client& client, std::string to, std::string message, std::vector<Channel>& Channels) {
-    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+std::string Privmsg::execute(Client &client, std::string to, std::string message, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+
+        (void)Ignore_Clients;
+        for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
             return it->sendPrivateMessage(message, client, to);
         }
@@ -17,19 +17,21 @@ std::string Commands::Privmsg(Client& client, std::string to, std::string messag
     return "the channel " + client.getChannel() + " does not exist\n";
 }
 
-std::string Commands::Join(Client& client, std::string channel, std::vector<Channel>& Channels, std::vector<Client>& Clients) {
+std::string Join::execute(Client &client, std::string channel_name, std::string ignore,std::vector<Channel> &Channels, std::vector<Client> &Clients) {
+    (void)ignore;
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-        if (it->getChannelName() == channel) {
-            client.setChannel(channel);
+        if (it->getChannelName() == channel_name) {
+            client.setChannel(channel_name);
             return it->inviteClient(client, client.get_username(), Clients);
         }
     }
-    Channels.push_back(Channel(client, channel));
-    client.setChannel(channel);
-    return "Created and joined channel " + channel + "\n";
+    Channels.push_back(Channel(client, channel_name));
+    client.setChannel(channel_name);
+    return "Created and joined channel " + channel_name + "\n";
 }
 
-std::string Commands::Kick(Client& client, std::string username, std::string from_channel, std::vector<Channel>& Channels) {
+std::string Kick::execute(Client &client, std::string username, std::string from_channel, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+    (void)Ignore_Clients;    
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == from_channel) {
             return it->kickClient(client, username);
@@ -37,3 +39,6 @@ std::string Commands::Kick(Client& client, std::string username, std::string fro
     }
     return "the channel " + from_channel + " does not exist\n";
 }
+
+
+

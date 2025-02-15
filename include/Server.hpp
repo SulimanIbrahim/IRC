@@ -29,6 +29,7 @@
 #include <poll.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <map>
 
 class Server {
 private:
@@ -42,9 +43,9 @@ private:
     int _serverSocket;
     std::vector<Client> Clients;
     std::vector<Channel> Channels;
+    std::map<std::string, Commands*> _commands;
     struct sockaddr_in _server_addr;
     Parser _parser;
-    Commands _commands;
 
 public:
     Server(int ac, char **av);

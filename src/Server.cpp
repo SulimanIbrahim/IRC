@@ -7,6 +7,9 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _password = _parser.getPassword();  // Retrieve parsed password
     _serverSocket = -1;
     kq_fd = -1;
+    _commands["privmsg"] = new Privmsg();
+    _commands["join"] = new Join();
+    _commands["kick"] = new Kick();
     std::cout << "Server initialized with port " << _port << " and password " << _password << std::endl;
 }
 
@@ -14,6 +17,10 @@ Server::~Server() {
     std::cout << "Server destructor" << std::endl;
     if (_serverSocket != -1)
         close(_serverSocket);
+    
+    for (std::map<std::string, Commands*>::iterator it = _commands.begin(); it != _commands.end(); ++it) {
+        delete it->second;
+    }
 }
 
 std::string Server::ParseComands(std::string str, Client &client) {
@@ -21,52 +28,49 @@ std::string Server::ParseComands(std::string str, Client &client) {
         return "";
     std::vector<std::string> tokens = _parser.split(str, ' ');
     
+
     // Convert command to lowercase for case-insensitive comparison
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
+    // polymorphism for commands Kick Join and Privmsg
+    if (_commands.find(cmd) != _commands.end()) {
+        return _commands[cmd]->execute(client, tokens[1], tokens[2], Channels, Clients);
+    }
+
     // Always allow AUTH, HELP and PASS commands
-    if (cmd == "auth")
-        return _commands.Auth();
-    if (cmd == "help")
-        return _commands.Help();
-    if (cmd == "pass")
-        return _commands.Pass(client, tokens, _password);
+    // if (cmd == "auth")
+    //     return _commands.Auth();
+    // if (cmd == "help")
+    //     return _commands.Help();
+    // if (cmd == "pass")
+    //     return _commands.Pass(client, tokens, _password);
 
     // Check authentication state for all other commands
-    if (!client.isPasswordEntered()) {
-        return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
-    }
+    // if (!client.isPasswordEntered()) {
+    //     return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
+    // }
 
     // Check nickname requirement for commands after NICK
-    if (cmd != "nick" && client.get_nick().empty()) {
-        return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
-    }
+    // if (cmd != "nick" && client.get_nick().empty()) {
+    //     return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
+    // }
 
     // Check username requirement for commands after USER
-    if (cmd != "nick" && cmd != "user" && client.get_username().empty()) {
-        return "\033[1;31m✗ Error: You must set a username first (use USER command)\n\033[0m";
-    }
+    // if (cmd != "nick" && cmd != "user" && client.get_username().empty()) {
+    //     return "\033[1;31m✗ Error: You must set a username first (use USER command)\n\033[0m";
+    // }
 
     // Process commands
-    if (cmd == "nick")
-        return _commands.Nick(client, tokens);
+    // if (cmd == "nick")
+    //     return _commands.Nick(client, tokens);
     
-    else if (cmd == "user")
-        return _commands.User(client, tokens);
-
-    else if (cmd == "privmsg" && tokens.size() >= 3)
-        return _commands.Privmsg(client, tokens[1], tokens[2], Channels);
-
-    else if (cmd == "join" && tokens.size() == 2)
-        return _commands.Join(client, tokens[1], Channels, Clients);
-
-    else if (cmd == "kick" && tokens.size() == 3)
-        return _commands.Kick(client, tokens[1], tokens[2], Channels);
-
-    else if (cmd == "invite" && tokens.size() == 3)
+    // else if (cmd == "user")
+    //     return _commands.User(client, tokens);
+    
+    // else if (cmd == "invite" && tokens.size() == 3)
         // return _commands.Invite(client, tokens[1], tokens[2], Channels);
-        return "Invite command not implemented, yet...\n";
+        // return "Invite command not implemented, yet...\n";
 
     return "\033[1;31m✗ Error: Invalid command. Type HELP to see available commands\n\033[0m";
 }
@@ -119,28 +123,10 @@ void Server::setNonBlocking(int fd) {
 }
 
 void Server::registerClientInQueue() {
-    if (Clients.empty()) {
-        std::cerr << "No clients to register" << std::endl;
-        return;
-    }
-
     int client_fd = Clients.back().get_fd();
-    if (client_fd < 0) {
-        std::cerr << "checking before calling kevent Invalid client FD" << std::endl;
-        return;
-    }
     struct kevent event;
     EV_SET(&event, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-
-    if (kq_fd < 0) {
-        std::cerr << "kq_fd is not valid" << std::endl;
-        return;
-    }
-
-    int result = kevent(kq_fd, &event, 1, NULL, 0, NULL);
-    if (result == 0) {
-        std::cout << "Client FD " << client_fd << " registered successfully" << std::endl;
-    } else {
+    if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0) {
         std::cerr << "Failed to register client FD: " << strerror(errno) << std::endl;
     }
 }
@@ -150,19 +136,17 @@ void Server::acceptClients() {
     socklen_t client_addr_size = sizeof(client_addr);
     int client_fd = accept(_serverSocket, (struct sockaddr*)&client_addr, &client_addr_size);
     if (client_fd < 0) {
-        if (errno != EWOULDBLOCK) {  // Real error.. not just no connections
+        if (errno != EWOULDBLOCK) {
             throw std::runtime_error("Failed to accept client connection");
         }
         return;
     } else {
-
         std::cout << "client_fd: " << client_fd << std::endl;
         setNonBlocking(client_fd);
         char ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
         std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
         Clients.__emplace_back(client_fd);
-        std::cout << "FD of the clinet is : " << Clients.back().get_fd() << std::endl;
         registerClientInQueue();
         send(client_fd, banner.c_str(), banner.size(), 0);
     }
@@ -176,7 +160,6 @@ void Server::registerServerInQueue() {
     }
     std::cout << "Server registered in kqueue" << std::endl;
 }
-
 
 void Server::handleDisconnections() {
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
@@ -198,19 +181,19 @@ void Server::handleEvents() {
     for (int i = 0; i < nev; i++) {
         if (events[i].ident == (unsigned int)_serverSocket) {
             acceptClients();
-        }
-        else if (events[i].flags & EV_EOF) {
-           handleDisconnections();
-        }
-        else if (events[i].flags & EVFILT_READ) {
-            for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-                if ((unsigned int)it->get_fd() == events[i].ident) {
-                    handleClientMessage(*it);
-                    break;
+        }  
+        else {
+            if (events[i].flags & EVFILT_READ) {
+                for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+                    if ((unsigned int)it->get_fd() == events[i].ident) {
+                        handleClientMessage(*it);
+                        break;
+                    }
                 }
             }
-        } else {
-            std::cout << "Unrecognized event" << std::endl;
+            if (events[i].flags & EV_EOF) {
+                handleDisconnections();
+            }
         }
     }
 }
