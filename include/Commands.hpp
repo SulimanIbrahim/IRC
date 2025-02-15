@@ -11,17 +11,30 @@
 
 class Commands {
 public:
-    Commands();
-    ~Commands();
-
-    static std::string Pass(Client &client, const std::vector<std::string>& tokens, std::string password);
-    static std::string Nick(Client &client, const std::vector<std::string>& tokens);
-    static std::string User(Client &client, const std::vector<std::string>& tokens);
-    static std::string Privmsg(Client &client, std::string to, std::string message, std::vector<Channel> &Channels);
-    static std::string Join(Client &client, std::string channel, std::vector<Channel> &Channels, std::vector<Client> &Clients);
-    static std::string Kick(Client &client, std::string username, std::string from_channel, std::vector<Channel> &Channels);
+    virtual std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) = 0;
+    virtual ~Commands();
     static std::string Help();
-    static std::string Auth();
+    static std::string AuthMsg();
 };
+
+class Privmsg : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
+class Join : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens,std::vector<Channel> &Channels, std::vector<Client> &Clients);
+};
+
+class Kick : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
+
+
+
+
 
 #endif

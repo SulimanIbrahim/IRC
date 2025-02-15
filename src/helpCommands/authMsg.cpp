@@ -1,7 +1,7 @@
 
 #include "../../include/Commands.hpp"
 
-std::string Commands::Auth() {
+std::string Commands::AuthMsg() {
     return "\033[1;36m╔════════════════════════════════════════╗\n"
            "║     \033[1;33mWelcome to IRC Registration     \033[1;36m   ║\n"
            "╚════════════════════════════════════════╝\n\n"

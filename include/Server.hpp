@@ -13,6 +13,7 @@
 
 #include "Client.hpp"
 #include "Commands.hpp"
+#include "Auth.hpp"
 #include "Channel.hpp"
 #include "Parser.hpp"
 #include <fcntl.h>
@@ -27,8 +28,10 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
-#include <sys/event.h>
+#include <kqueue/sys/event.h>
+#include <sys/un.h>
 #include <sys/time.h>
+#include <map>
 
 class Server {
 private:
@@ -42,9 +45,10 @@ private:
     int _serverSocket;
     std::vector<Client> Clients;
     std::vector<Channel> Channels;
+    std::map<std::string, Commands*> _commands;
+    std::map<std::string, Auth*> _auth_commands;
     struct sockaddr_in _server_addr;
     Parser _parser;
-    Commands _commands;
 
 public:
     Server(int ac, char **av);
@@ -57,7 +61,6 @@ public:
     void acceptClients();
     void initKqueue();
     void registerServerInQueue();
-    // void monitorClients();
     void registerClientInQueue();
     void handleEvents();
     void handleClientMessage(Client &client);
@@ -67,8 +70,6 @@ public:
     void stop();
     std::string ParseComands(std::string str, Client &client);
     void CheckComands(std::string str, Client &client);
-    // void readFromClients();
-    // void writeToClient(Client client, std::string message);
 };
 
 #endif
