@@ -9,15 +9,14 @@ SRC= main.cpp \
 	 src/Channel.cpp \
 	 src/Client.cpp \
 	 src/Commands.cpp\
-	 src/commands/auth.cpp\
-	 src/commands/help.cpp\
-	 src/commands/nick.cpp\
-	 src/commands/pass.cpp\
-	 src/commands/user.cpp
+	 src/Auth.cpp\
+	 src/helpCommands/authMsg.cpp\
+	 src/helpCommands/help.cpp\
+	 
 
 OBJ= $(SRC:.cpp=.o)
 
-HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp
+HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp ./include/Auth.hpp
 
 run: all
 	./$(NAME) 4444 123

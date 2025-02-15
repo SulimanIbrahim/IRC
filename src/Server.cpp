@@ -10,6 +10,9 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["privmsg"] = new Privmsg();
     _commands["join"] = new Join();
     _commands["kick"] = new Kick();
+    _auth_commands["pass"] = new Pass();
+    _auth_commands["nick"] = new Nick();
+    _auth_commands["user"] = new User();
     std::cout << "Server initialized with port " << _port << " and password " << _password << std::endl;
 }
 
@@ -21,57 +24,29 @@ Server::~Server() {
     for (std::map<std::string, Commands*>::iterator it = _commands.begin(); it != _commands.end(); ++it) {
         delete it->second;
     }
+    for (std::map<std::string, Auth*>::iterator it = _auth_commands.begin(); it != _auth_commands.end(); ++it) {
+        delete it->second;
+    }
 }
 
 std::string Server::ParseComands(std::string str, Client &client) {
     if (str.empty())
         return "";
     std::vector<std::string> tokens = _parser.split(str, ' ');
-    
-
     // Convert command to lowercase for case-insensitive comparison
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
-
+    if (cmd == "auth")
+        return Commands::AuthMsg();
+    if (cmd == "help")
+        return Commands::Help();
     // polymorphism for commands Kick Join and Privmsg
     if (_commands.find(cmd) != _commands.end()) {
         return _commands[cmd]->execute(client, tokens[1], tokens[2], Channels, Clients);
     }
-
-    // Always allow AUTH, HELP and PASS commands
-    // if (cmd == "auth")
-    //     return _commands.Auth();
-    // if (cmd == "help")
-    //     return _commands.Help();
-    // if (cmd == "pass")
-    //     return _commands.Pass(client, tokens, _password);
-
-    // Check authentication state for all other commands
-    // if (!client.isPasswordEntered()) {
-    //     return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
-    // }
-
-    // Check nickname requirement for commands after NICK
-    // if (cmd != "nick" && client.get_nick().empty()) {
-    //     return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
-    // }
-
-    // Check username requirement for commands after USER
-    // if (cmd != "nick" && cmd != "user" && client.get_username().empty()) {
-    //     return "\033[1;31m✗ Error: You must set a username first (use USER command)\n\033[0m";
-    // }
-
-    // Process commands
-    // if (cmd == "nick")
-    //     return _commands.Nick(client, tokens);
-    
-    // else if (cmd == "user")
-    //     return _commands.User(client, tokens);
-    
-    // else if (cmd == "invite" && tokens.size() == 3)
-        // return _commands.Invite(client, tokens[1], tokens[2], Channels);
-        // return "Invite command not implemented, yet...\n";
-
+    if (_auth_commands.find(cmd) != _auth_commands.end()) {
+        return _auth_commands[cmd]->runAuthCommands(client, tokens, _password);
+    }
     return "\033[1;31m✗ Error: Invalid command. Type HELP to see available commands\n\033[0m";
 }
 
