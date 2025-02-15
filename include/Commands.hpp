@@ -18,18 +18,18 @@ public:
 };
 
 class Privmsg : public Commands {
-public:
-    std::string execute(Client &client, std::string to, std::string message, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+    public:
+        std::string execute(Client &client, std::string to, std::string message, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
 
 class Join : public Commands {
-public:
-    std::string execute(Client &client, std::string channel_name, std::string ignore,std::vector<Channel> &Channels, std::vector<Client> &Clients);
+    public:
+        std::string execute(Client &client, std::string channel_name, std::string ignore,std::vector<Channel> &Channels, std::vector<Client> &Clients);
 };
 
 class Kick : public Commands {
-public:
-    std::string execute(Client &client, std::string username, std::string from_channel, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+    public:
+        std::string execute(Client &client, std::string username, std::string from_channel, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
 
 

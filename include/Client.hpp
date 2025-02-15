@@ -16,26 +16,26 @@
 
 
 class Client {
-private:
-    bool password_entered;
-    int _fd;
-    std::string _username;
-    std::string _nickname;
-    std::string at_channel;
+    private:
+        bool password_entered;
+        int _fd;
+        std::string _username;
+        std::string _nickname;
+        std::string at_channel;
 
-public:
-    Client(int _clientSockets);
-    ~Client();
+    public:
+        Client(int _clientSockets);
+        ~Client();
 
-    void set_nick(std::string nickname);
-    void set_username(std::string username);
-    void setPasswordEntered(bool value);
-    void setChannel(std::string channel);
-    std::string getChannel();
-    int get_fd();
-    std::string get_nick();
-    std::string get_username();
-    bool isPasswordEntered();
+        void set_nick(std::string nickname);
+        void set_username(std::string username);
+        void setPasswordEntered(bool value);
+        void setChannel(std::string channel);
+        std::string getChannel();
+        int get_fd();
+        std::string get_nick();
+        std::string get_username();
+        bool isPasswordEntered();
 };
 
 #endif

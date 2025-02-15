@@ -44,6 +44,7 @@ std::string Server::ParseComands(std::string str, Client &client) {
     if (_commands.find(cmd) != _commands.end()) {
         return _commands[cmd]->execute(client, tokens[1], tokens[2], Channels, Clients);
     }
+    // polymorphism for Auth commands Pass Nick and User
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
         return _auth_commands[cmd]->runAuthCommands(client, tokens, _password);
     }
