@@ -28,7 +28,8 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
-#include <sys/event.h>
+#include <kqueue/sys/event.h>
+#include <sys/un.h>
 #include <sys/time.h>
 #include <map>
 
