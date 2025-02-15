@@ -28,6 +28,7 @@ jobs:
         sudo ldconfig
 
     - name: Build project
+      id: build
       run: make
 
     - name: Upload artifacts
@@ -35,3 +36,21 @@ jobs:
       with:
         name: ircserve
         path: ircserve
+
+    - name: IRC notification - Success
+      if: success()
+      uses: Gottox/irc-message-action@v2
+      with:
+        server: 'irc.libera.chat'
+        channel: '#ircserve-builds'
+        nickname: 'github-bot'
+        message: ' Build succeeded for ${{ github.repository }} by ${{ github.actor }} - ${{ github.event.head_commit.message }}'
+
+    - name: IRC notification - Failure
+      if: failure()
+      uses: Gottox/irc-message-action@v2
+      with:
+        server: 'irc.libera.chat'
+        channel: '#ircserve-builds'
+        nickname: 'github-bot'
+        message: ' Build failed for ${{ github.repository }} by ${{ github.actor }} - ${{ github.event.head_commit.message }}'
