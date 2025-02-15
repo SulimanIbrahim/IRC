@@ -35,14 +35,18 @@ std::string Server::ParseComands(std::string str, Client &client) {
     std::vector<std::string> tokens = _parser.split(str, ' ');
     // Convert command to lowercase for case-insensitive comparison
     std::string cmd = tokens[0];
-    std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
+    for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
+        *it = tolower(*it);
     if (cmd == "auth")
         return Commands::AuthMsg();
     if (cmd == "help")
         return Commands::Help();
     // polymorphism for commands Kick Join and Privmsg
     if (_commands.find(cmd) != _commands.end()) {
-        return _commands[cmd]->execute(client, tokens[1], tokens[2], Channels, Clients);
+        if (client.isPasswordEntered() or cmd == "pass")
+            return _commands[cmd]->execute(client, tokens, Channels, Clients);
+        else
+            return "\033[1;31m✗ Error: Password has not been entered\n\033[0m";
     }
     // polymorphism for Auth commands Pass Nick and User
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
@@ -122,7 +126,7 @@ void Server::acceptClients() {
         char ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
         std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-        Clients.__emplace_back(client_fd);
+        Clients.push_back(Client(client_fd));
         registerClientInQueue();
         send(client_fd, banner.c_str(), banner.size(), 0);
     }

@@ -1,3 +1,4 @@
-.o
+*.o
 Notes.md
 .vscode
+ircserve
