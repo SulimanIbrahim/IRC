@@ -10,6 +10,8 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["privmsg"] = new Privmsg();
     _commands["join"] = new Join();
     _commands["kick"] = new Kick();
+    _commands["pubmsg"] = new Pubmsg();
+    _commands["list"] = new List();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();

@@ -28,7 +28,11 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
-#include <kqueue/sys/event.h>
+#if defined(__LINUX__)
+    #include <kqueue/sys/event.h>
+#else
+    #include <sys/event.h>
+#endif
 #include <sys/un.h>
 #include <sys/time.h>
 #include <map>
