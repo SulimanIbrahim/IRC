@@ -68,7 +68,7 @@ public:
     void registerClientInQueue();
     void handleEvents();
     void handleClientMessage(Client &client);
-    void handleDisconnections();
+    void handleDisconnections(int fd);
     void processMessage(Client &client, std::string message);
     void setNonBlocking(int fd);
     void stop();

@@ -1,10 +1,9 @@
 #include "../include/Server.hpp"
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
-    banner = "Welcome to the IRC Server\n";
-    _running = false;
-    _port = _parser.getPort();  // Retrieve parsed port
-    _password = _parser.getPassword();  // Retrieve parsed password
+    banner = "\033[1;34m  _   _ _____ _      _      ____ \n | | | | ____| |    | |    |  _  |  \n | |_| |  _| | |    | |    | | | |\n |  _  | |___| |___ | |___ | |_| |\n |_| |_|_____|_____|_____| |_____|\n\n\033[0m";
+    _port = _parser.getPort();
+    _password = _parser.getPassword();
     _serverSocket = -1;
     kq_fd = -1;
     _commands["privmsg"] = new Privmsg();
@@ -19,7 +18,7 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
 }
 
 Server::~Server() {
-    std::cout << "Server destructor" << std::endl;
+    std::cout << "Server Destructor" << std::endl;
     if (_serverSocket != -1)
         close(_serverSocket);
     
@@ -143,9 +142,9 @@ void Server::registerServerInQueue() {
     std::cout << "Server registered in kqueue" << std::endl;
 }
 
-void Server::handleDisconnections() {
+void Server::handleDisconnections(int fd) {
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_fd() & EV_EOF) {
+        if (it->get_fd() == fd) {
             close(it->get_fd());
             Clients.erase(it);
             std::cout << RED << "Client disconnected" << RESET << std::endl;
@@ -163,7 +162,7 @@ void Server::handleEvents() {
     for (int i = 0; i < nev; i++) {
         if (events[i].ident == (unsigned int)_serverSocket) {
             acceptClients();
-        }  
+        }
         else {
             if (events[i].flags & EVFILT_READ) {
                 for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
@@ -174,7 +173,7 @@ void Server::handleEvents() {
                 }
             }
             if (events[i].flags & EV_EOF) {
-                handleDisconnections();
+                handleDisconnections(events[i].ident);
             }
         }
     }
@@ -189,7 +188,7 @@ void Server::handleClientMessage(Client &client) {
     char buffer[BUFFER_SIZE];
     int bytes = recv(client.get_fd(), buffer, BUFFER_SIZE, 0);
     if (bytes == -1) {
-        throw std::runtime_error("Failed to receive message from client");
+        std::cerr << "Failed to receive message from client: " << strerror(errno) << std::endl;
     }
     else if (bytes == 0) {
         return;
