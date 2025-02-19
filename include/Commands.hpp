@@ -31,9 +31,20 @@ class Kick : public Commands {
     public:
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
+class DCCSend : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
 
+class DCCAccept : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
 
-
+class DCCReject : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
 
 
 

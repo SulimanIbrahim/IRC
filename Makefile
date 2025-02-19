@@ -19,7 +19,7 @@ OBJ= $(SRC:.cpp=.o)
 HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp ./include/Auth.hpp
 
 %.o: %.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -lkqueue
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: all
 	./$(NAME) 4444 123
@@ -28,7 +28,7 @@ nc:
 	nc 127.0.0.1 4444 
 
 all: $(NAME)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) -lkqueue
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 $(NAME): $(OBJ) $(HEADERS)
 

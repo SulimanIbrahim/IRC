@@ -10,6 +10,9 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["privmsg"] = new Privmsg();
     _commands["join"] = new Join();
     _commands["kick"] = new Kick();
+    _commands["sendfile"] = new DCCSend();
+    _commands["accept"] = new DCCAccept();
+    _commands["reject"] = new DCCReject();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
@@ -126,7 +129,7 @@ void Server::acceptClients() {
         char ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
         std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-        Clients.push_back(Client(client_fd));
+        Clients.push_back(Client(client_fd, ip));
         registerClientInQueue();
         send(client_fd, banner.c_str(), banner.size(), 0);
     }

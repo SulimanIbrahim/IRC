@@ -13,18 +13,20 @@
 #include <unistd.h>
 #include <cstring>
 #include <poll.h>
+#include <map>
 
 
 class Client {
     private:
         bool password_entered;
         int _fd;
+        std::string _ip;
         std::string _username;
         std::string _nickname;
         std::string at_channel;
 
     public:
-        Client(int _clientSockets);
+        Client(int _clientSockets, std::string ip);
         ~Client();
 
         void set_nick(std::string nickname);
@@ -33,9 +35,11 @@ class Client {
         void setChannel(std::string channel);
         std::string getChannel();
         int get_fd();
+        std::string get_ip();
         std::string get_nick();
         std::string get_username();
         bool isPasswordEntered();
 };
+
 
 #endif

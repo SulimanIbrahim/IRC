@@ -51,4 +51,47 @@ std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std:
 }
 
 
+std::string DCCSend::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients){
+    (void)Clients;
+    if (tokens.size() < 3) {
+        return "Not enough arguments\n";
+    }
+    std::string file = tokens[1];
+    std::string to = tokens[2];
+    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+        if (it->getChannelName() == client.getChannel()) {
+            return it->sendDCCRequest(file, client, to);
+        }
+    }
+    return "DCCSend\n";
+}
 
+std::string DCCAccept::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+    (void)Ignore_Clients;
+    if (tokens.size() < 3) {
+        return "Not enough arguments\n";
+    }
+    std::string client_to_accept = tokens[1];
+    std::string filename = tokens[2];
+    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+        if (it->getChannelName() == client.getChannel()) {
+            return it->acceptDCCRequest(client_to_accept, filename);
+        }
+    }
+    return "DCCAccept\n";
+}
+
+std::string DCCReject::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+    (void)Ignore_Clients;
+    if (tokens.size() < 3) {
+        return "Not enough arguments\n";
+    }
+    std::string client_to_reject = tokens[1];
+    std::string filename = tokens[2];
+    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+        if (it->getChannelName() == client.getChannel()) {
+            return it->rejectDCCRequest(client_to_reject, filename);
+        }
+    }
+    return "DCCReject\n";
+}

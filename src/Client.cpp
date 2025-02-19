@@ -1,9 +1,10 @@
 #include "../include/Client.hpp"
 
-Client::Client(int _clientSockets):password_entered(false), _username(""), _nickname(""), at_channel("") {
+Client::Client(int _clientSockets, std::string ip):password_entered(false), _username(""), _nickname(""), at_channel("") {
     std::cout << "Client constructor" << std::endl;
     std::cout << "Client socket: " << _clientSockets << std::endl;
     _fd = _clientSockets;
+    _ip = ip;
     _username = "Client";
     _nickname = "Client";
     at_channel = "General";
@@ -39,6 +40,11 @@ std::string Client::getChannel()
 int Client::get_fd()
 {
     return _fd;
+};
+
+std::string Client::get_ip()
+{
+    return _ip;
 };
 std::string Client::get_nick(){
     return _nickname;
