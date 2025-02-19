@@ -13,6 +13,16 @@ Client::~Client()
     std::cout << "Client destructor has been called" << std::endl;
 }
 
+Client::Client(const Client &client)
+{
+    std::cout << "Client copy constructor" << std::endl;
+    _fd = client._fd;
+    _username = client._username;
+    _nickname = client._nickname;
+    at_channel = client.at_channel;
+    password_entered = client.password_entered;
+}
+
 void Client::set_nick(std::string nickname)
 {
     _nickname = nickname;
