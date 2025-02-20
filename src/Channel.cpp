@@ -3,11 +3,24 @@
 Channel::Channel(Client client, std::string ChannelName): _ChannelName(ChannelName)
 {
     _Clients.push_back(client);
+    _operators.push_back(client);
+    _Topic = "";
+    _Password = "";
+    _isPrivate = false;
+};
+
+Channel::Channel(Client client, std::string ChannelName, std::string password): _ChannelName(ChannelName), _Password(password)
+{
+    _Clients.push_back(client);
+    _operators.push_back(client);
+    _Topic = "";
+    _isPrivate = true;
 };
 
 Channel::~Channel()
 {
 };
+
 
 std::string Channel::inviteClient(Client client, std::string client_to_add, std::vector<Client> &Clients)
 {
@@ -15,7 +28,7 @@ std::string Channel::inviteClient(Client client, std::string client_to_add, std:
     for (; it != _Clients.end(); ++it)
     {
         if (it->get_username() == client_to_add)
-            break;
+            return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
     }
     if (it == _Clients.end()) {
         for (it = Clients.begin(); it != Clients.end(); ++it)
@@ -31,23 +44,35 @@ std::string Channel::inviteClient(Client client, std::string client_to_add, std:
     return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
 };
 
+std::string Channel::listClients()
+{
+    std::string clients = "Clients in channel " + _ChannelName + ":\n";
+    for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
+    {
+        clients += it->get_username() + "\n";
+    }
+    return clients;
+};
+
 void Channel::sendMessage(std::string message, Client &client)
 {
+    std::string message_to_send = client.get_username() + ": " + message + "\n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_username() != client.get_username())
-            send(it->get_fd(), message.c_str(), message.size(), 0);
+            send(it->get_fd(), message_to_send.c_str(), message_to_send.size(), 0);
     }
 };
 
 std::string Channel::sendPrivateMessage(std::string message, Client &client, std::string to)
 {
     std::string message_to_send = client.get_username() + " whispers: " + message + "\n";
+    std::cout << message_to_send << std::endl;
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_username() == to)
         {
-            send(it->get_fd(), message_to_send.c_str(), message.size(), 0);
+            send(it->get_fd(), message_to_send.c_str(), message_to_send.size(), 0);
             return "";
         }
     }
@@ -69,6 +94,29 @@ std::string Channel::kickClient(Client client, std::string client_to_kick)
     return "Client " + client_to_kick + " not found in channel " + _ChannelName + "\n";
 };
 
+std::string Channel::showTopic(Client client)
+{
+    for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+    {
+        if (it->get_username() == client.get_username())
+            return "Topic: " + _Topic + "\n";
+    }
+    return "You are not an operator in channel " + _ChannelName + "\n";
+};
+
+std::string Channel::setTopic(Client client, std::string topic)
+{
+    for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+    {
+        if (it->get_username() == client.get_username()){
+            _Topic = topic;
+            return "Topic set to " + topic + "\n";
+        }
+    }
+    return "You are not an operator in channel " + _ChannelName + "\n";
+};
+
+
 std::string Channel::getChannelName()
 {
     return _ChannelName;
@@ -77,4 +125,14 @@ std::string Channel::getChannelName()
 std::vector<Client> Channel::getClients()
 {
     return _Clients;
+};
+
+bool Channel::isPrivate()
+{
+    return _isPrivate;
+};
+
+std::string Channel::getPassword()
+{
+    return _Password;
 };

@@ -25,6 +25,7 @@ class Client {
 
     public:
         Client(int _clientSockets);
+        Client(const Client &client);
         ~Client();
 
         void set_nick(std::string nickname);

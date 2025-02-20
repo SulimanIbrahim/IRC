@@ -1,15 +1,20 @@
 #include "../include/Server.hpp"
 
+
+bool g_running = false;
+
 Server::Server(int ac, char **av) : _parser(ac, av) {
-    banner = "Welcome to the IRC Server\n";
-    _running = false;
-    _port = _parser.getPort();  // Retrieve parsed port
-    _password = _parser.getPassword();  // Retrieve parsed password
+    banner = "\033[1;34m  _   _ _____ _      _      ____ \n | | | | ____| |    | |    |  _  |  \n | |_| |  _| | |    | |    | | | |\n |  _  | |___| |___ | |___ | |_| |\n |_| |_|_____|_____|_____| |_____|\n\n\033[0m";
+    _port = _parser.getPort();
+    _password = _parser.getPassword();
     _serverSocket = -1;
     kq_fd = -1;
+    online_clients = 0;
     _commands["privmsg"] = new Privmsg();
     _commands["join"] = new Join();
     _commands["kick"] = new Kick();
+    _commands["pubmsg"] = new Pubmsg();
+    _commands["list"] = new List();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
@@ -17,23 +22,54 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
 }
 
 Server::~Server() {
-    std::cout << "Server destructor" << std::endl;
     if (_serverSocket != -1)
         close(_serverSocket);
     
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        close(it->get_fd());
+    }
+
     for (std::map<std::string, Commands*>::iterator it = _commands.begin(); it != _commands.end(); ++it) {
         delete it->second;
     }
     for (std::map<std::string, Auth*>::iterator it = _auth_commands.begin(); it != _auth_commands.end(); ++it) {
         delete it->second;
     }
+    std::cout << MAGENTA << "Server is shutting down..." << RESET << std::endl;
+}
+
+static int sendTypingEffect(int client_fd, std::string message, int delay) {
+    int bytes_sent;
+    for (size_t i = 0; i < message.size(); i++) {
+        bytes_sent = send(client_fd, &message[i], 1, 0);
+        usleep(delay * 1000); // Small delay for effect
+    }
+    return bytes_sent;
+}
+
+static void sendProgressBar(int client_fd) {
+    std::string bar = "\033[1;34mLoading: [";
+    send(client_fd, bar.c_str(), bar.size(), 0);
+    for (int i = 0; i < 20; i++) {
+        send(client_fd, "=", 1, 0);
+        usleep(200000); // 0.3 seconds delay
+    }
+    send(client_fd, "] Done!\n\033[0m", 11, 0);
+}
+
+static void sendAnimatedText(int client_fd, std::string message) {
+    for (size_t i = 0; i < message.size(); i++) {
+        std::string temp = "\r" + message.substr(0, i+1);
+        send(client_fd, temp.c_str(), temp.size(), 0);
+        usleep(10000); // 0.1 sec delay
+    }
+    send(client_fd, "\n\033[1;32mServer: \033[0m", 20, 0);
 }
 
 std::string Server::ParseComands(std::string str, Client &client) {
     if (str.empty())
         return "";
     std::vector<std::string> tokens = _parser.split(str, ' ');
-    // Convert command to lowercase for case-insensitive comparison
     std::string cmd = tokens[0];
     for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
         *it = tolower(*it);
@@ -41,14 +77,12 @@ std::string Server::ParseComands(std::string str, Client &client) {
         return Commands::AuthMsg();
     if (cmd == "help")
         return Commands::Help();
-    // polymorphism for commands Kick Join and Privmsg
     if (_commands.find(cmd) != _commands.end()) {
         if (client.isPasswordEntered() or cmd == "pass")
             return _commands[cmd]->execute(client, tokens, Channels, Clients);
         else
             return "\033[1;31m✗ Error: Password has not been entered\n\033[0m";
     }
-    // polymorphism for Auth commands Pass Nick and User
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
         return _auth_commands[cmd]->runAuthCommands(client, tokens, _password);
     }
@@ -61,7 +95,23 @@ void Server::CheckComands(std::string str, Client &client) {
     for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
     {
         response = ParseComands(*i, client);
-        send(client.get_fd(), response.c_str(), response.size(), 0);
+        if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
+            if (errno == EPIPE) {
+                std::cerr << "Broken pipe, client disconnected" << std::endl;
+                handleDisconnections(client.get_fd());
+            } else {
+                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+            }
+        }
+        else if (send(client.get_fd(), "\n\033[1;32mServer: \033[0m", 20, 0) < 0) {
+            if (errno == EPIPE) {
+                std::cerr << "Broken pipe, client disconnected" << std::endl;
+                handleDisconnections(client.get_fd());
+            } else {
+                std::cerr << "Failed to send message" << std::endl;
+            }
+        }
+
     }
 }
 
@@ -70,10 +120,7 @@ void Server::setupSocket() {
     if (_serverSocket == -1) {
         throw std::runtime_error("Failed to create server socket");
     }
-
-    // I added this line to make the server_socket non-blocked
     setNonBlocking(_serverSocket);
-
     int opt = 1;
     if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
         throw std::runtime_error("Failed to set socket options");
@@ -91,7 +138,7 @@ void Server::bindSocket() {
 }
 
 void Server::listenSocket() {
-    if (listen(_serverSocket, 5) == -1) {
+    if (listen(_serverSocket, SOMAXCONN) == -1) {
         throw std::runtime_error("Failed to listen on server socket");
     }
     std::cout << YELLOW << "Server is listening on port " << RESET << _port << std::endl;
@@ -112,24 +159,36 @@ void Server::registerClientInQueue() {
 }
 
 void Server::acceptClients() {
+    int client_fd;
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
-    int client_fd = accept(_serverSocket, (struct sockaddr*)&client_addr, &client_addr_size);
+    
+
+    client_fd = accept(_serverSocket, (struct sockaddr*)&client_addr, &client_addr_size);
     if (client_fd < 0) {
         if (errno != EWOULDBLOCK) {
-            throw std::runtime_error("Failed to accept client connection");
+            std::cerr << "Failed to accept client: " << strerror(errno) << std::endl;
         }
         return;
-    } else {
-        std::cout << "client_fd: " << client_fd << std::endl;
-        setNonBlocking(client_fd);
-        char ip[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
-        std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-        Clients.push_back(Client(client_fd));
-        registerClientInQueue();
-        send(client_fd, banner.c_str(), banner.size(), 0);
     }
+    online_clients++;
+    if (online_clients >= 1000) {
+        send(client_fd, "\033[1;31m✗ Error: Server is Busy, please try again later\n\033[0m", 50, 0);
+        close(client_fd);
+        online_clients--;
+        return;
+    }
+    std::cout << "client_fd: " << client_fd << std::endl;
+    setNonBlocking(client_fd);
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
+    std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
+    Client client(client_fd);
+    Clients.push_back(client);
+    registerClientInQueue();
+    sendProgressBar(client_fd);
+    sendAnimatedText(client_fd, "Welcome to the 500ISE server! Type 'auth' to authenticate\n");
+    // int bytes_sent = sendTypingEffect(client_fd, banner, 10);
 }
 
 void Server::registerServerInQueue() {
@@ -141,11 +200,12 @@ void Server::registerServerInQueue() {
     std::cout << "Server registered in kqueue" << std::endl;
 }
 
-void Server::handleDisconnections() {
+void Server::handleDisconnections(int fd) {
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_fd() & EV_EOF) {
+        if (it->get_fd() == fd) {
             close(it->get_fd());
             Clients.erase(it);
+            online_clients--;
             std::cout << RED << "Client disconnected" << RESET << std::endl;
             break;
         }
@@ -158,10 +218,12 @@ void Server::handleEvents() {
     if (nev == -1) {
         throw std::runtime_error("Failed to poll events from kqueue");
     }
+    std::cout << "Received " << nev << " events" << std::endl;
+    std::cout << BLUE <<"Online clients: " << online_clients << RESET << std::endl;
     for (int i = 0; i < nev; i++) {
         if (events[i].ident == (unsigned int)_serverSocket) {
             acceptClients();
-        }  
+        }
         else {
             if (events[i].flags & EVFILT_READ) {
                 for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
@@ -172,7 +234,7 @@ void Server::handleEvents() {
                 }
             }
             if (events[i].flags & EV_EOF) {
-                handleDisconnections();
+                handleDisconnections(events[i].ident);
             }
         }
     }
@@ -186,13 +248,16 @@ void Server::processMessage(Client &client, std::string message) {
 void Server::handleClientMessage(Client &client) {
     char buffer[BUFFER_SIZE];
     int bytes = recv(client.get_fd(), buffer, BUFFER_SIZE, 0);
-    if (bytes == -1) {
-        throw std::runtime_error("Failed to receive message from client");
+    if (bytes < 0) {
+        if (errno != EWOULDBLOCK) {
+            if (errno == ECONNRESET) {
+                handleDisconnections(client.get_fd());
+            } else {
+                std::cout << "Failed to receive message from client: " << strerror(errno) << std::endl;
+            }
+        }
     }
-    else if (bytes == 0) {
-        return;
-    }
-    buffer[bytes] = '\0';
+    buffer[bytes + 1] = '\0';
     std::string message(buffer);
     processMessage(client, message);
 }
@@ -205,23 +270,24 @@ void Server::initKqueue() {
     }
 }
 
+
+void Server::handlesignal(int sig) {
+    if (sig == SIGINT) {
+        g_running = false;
+    }
+}
+
 void Server::start() {
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, Server::handlesignal);
     setupSocket();
     bindSocket();
     listenSocket();
     initKqueue();
     registerServerInQueue();
-    _running = true;
+    g_running = true;
     std::cout << GREEN << "Server is up and running..." << RESET <<  std::endl;
-    while (_running) {
+    while (g_running) {
         handleEvents();
     }
-}
-
-
-void Server::stop() {
-    _running = false;
-    if (_serverSocket != -1)
-        close(_serverSocket);
-    std::cout << RED << "Server is shutting down..." << RESET << std::endl;
 }

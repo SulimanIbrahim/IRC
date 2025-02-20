@@ -10,19 +10,25 @@ Client::Client(int _clientSockets):password_entered(false), _username(""), _nick
 }
 Client::~Client()
 {
-    std::cout << "Client destructor" << std::endl;
-    std::cout << "Client Disconnected" << std::endl;
-    // close(_fd);
+    std::cout << "Client destructor has been called" << std::endl;
+}
+
+Client::Client(const Client &client)
+{
+    std::cout << "Client copy constructor" << std::endl;
+    _fd = client._fd;
+    _username = client._username;
+    _nickname = client._nickname;
+    at_channel = client.at_channel;
+    password_entered = client.password_entered;
 }
 
 void Client::set_nick(std::string nickname)
 {
-    // adding a parsing function to check if the nickname is valid
     _nickname = nickname;
 };
 void Client::set_username(std::string username)
 {
-    // adding a parsing function to check if the username is valid
     _username = username;
 };
 
