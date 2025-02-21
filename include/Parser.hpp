@@ -28,6 +28,7 @@ public:
     ~Parser();
 
     std::vector<std::string> split(std::string str, char delimiter);
+    static std::string join_message(std::vector<std::string> tokens);
     int getPort() const;
     std::string getPassword() const;
 };

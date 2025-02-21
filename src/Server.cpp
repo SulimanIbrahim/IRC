@@ -15,6 +15,7 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["kick"] = new Kick();
     _commands["pubmsg"] = new Pubmsg();
     _commands["list"] = new List();
+    _commands["mode"] = new Mode();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
@@ -38,14 +39,14 @@ Server::~Server() {
     std::cout << MAGENTA << "Server is shutting down..." << RESET << std::endl;
 }
 
-static int sendTypingEffect(int client_fd, std::string message, int delay) {
-    int bytes_sent;
-    for (size_t i = 0; i < message.size(); i++) {
-        bytes_sent = send(client_fd, &message[i], 1, 0);
-        usleep(delay * 1000); // Small delay for effect
-    }
-    return bytes_sent;
-}
+// static int sendTypingEffect(int client_fd, std::string message, int delay) {
+//     int bytes_sent;
+//     for (size_t i = 0; i < message.size(); i++) {
+//         bytes_sent = send(client_fd, &message[i], 1, 0);
+//         usleep(delay * 1000); // Small delay for effect
+//     }
+//     return bytes_sent;
+// }
 
 static void sendProgressBar(int client_fd) {
     std::string bar = "\033[1;34mLoading: [";
@@ -84,7 +85,7 @@ std::string Server::ParseComands(std::string str, Client &client) {
             return "\033[1;31m✗ Error: Password has not been entered\n\033[0m";
     }
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
-        return _auth_commands[cmd]->runAuthCommands(client, tokens, _password);
+        return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
     }
     return "\033[1;31m✗ Error: Invalid command. Type HELP to see available commands\n\033[0m";
 }

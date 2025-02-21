@@ -12,7 +12,7 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
         return "Not enough arguments\n";
     }
     std::string to = tokens[1];
-    std::string message = tokens[2];
+    std::string message = Parser::join_message(tokens);
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
             return it->sendPrivateMessage(message, client, to);
@@ -29,14 +29,13 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == channel_name) {
             client.setChannel(channel_name);
-            if (it->isPrivate())
-            {
+            if (it->isPrivate() and !it->isInviteOnly()) {
                 if (tokens.size() < 3)
                     return "This channel is private, please provide a password\n";
                 else if (it->getPassword() != tokens[2])
                     return "Invalid password\n";
             }
-            return it->inviteClient(client, client.get_username(), Clients);
+        return it->inviteClient(client, client.get_username(), Clients);
         }
     }
     if (tokens.size() == 3) {
@@ -48,7 +47,7 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
     return "Created and joined channel " + channel_name + "\n";
 }
 
-std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
     if (tokens.size() < 3) {
         return "Not enough arguments\n";
@@ -66,7 +65,7 @@ std::string Pubmsg::execute(Client &client, std::vector<std::string> &tokens, st
     if (tokens.size() < 2) {
         return "Not enough arguments\n";
     }
-    std::string message = tokens[1];
+    std::string message = Parser::join_message(tokens);
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
             it->sendMessage(message, client);
@@ -85,4 +84,17 @@ std::string List::execute(Client &client, std::vector<std::string> &tokens, std:
             list += it->listClients();
     }
     return list;
+}
+
+std::string Mode::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+    (void)Ignore_Clients;
+    if (tokens.size() > 3) {
+        return "Too many arguments\n";
+    }
+    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+        if (it->getChannelName() == client.getChannel()) {
+            return it->mode(client, tokens);
+        }
+    }
+    return "the channel " + client.getChannel() + " does not exist\n";
 }

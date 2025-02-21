@@ -54,6 +54,14 @@ std::vector<std::string> Parser::split(std::string str, char delimiter) {
     return tokens;
 }
 
+std::string Parser::join_message(std::vector<std::string> tokens) {
+    std::string message = "";
+    for(size_t i = 2; i < tokens.size(); i++) {
+        message += tokens[i] + " ";
+    }
+    return message;
+}
+
 int Parser::getPort() const {
     return _port;
 }
