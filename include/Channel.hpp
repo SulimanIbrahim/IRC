@@ -32,7 +32,8 @@ public:
 
     std::string listClients();
     std::string getChannelName();
-    std::string inviteClient(Client client, std::string clien_to_add, std::vector<Client> &Clients);
+    std::string JoinChannel(Client client, std::vector<Client> &Clients);
+    std::string Invite(Client client, std::string clien_to_add, std::vector<Client> &Clients);
     std::string kickClient(Client client, std::string clien_to_kick);
     void sendMessage(std::string message, Client &client);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);

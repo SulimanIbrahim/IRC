@@ -1,7 +1,7 @@
 NAME= ircserve
 
 CXX= c++
-CXXFLAGS= -Wall -Wextra -Werror -std=c++98 -g3
+CXXFLAGS= -Wall -Wextra -Werror -std=c++98
 
 SRC= main.cpp \
 	 src/Server.cpp \
@@ -26,7 +26,7 @@ endif
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(KQUEUE)
 
 run: all
-	valgrind ./$(NAME) 4444 123
+	./$(NAME) 4444 123
 
 nc:
 	nc 127.0.0.1 4444 

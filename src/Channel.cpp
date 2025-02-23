@@ -25,53 +25,55 @@ Channel::~Channel()
 {
 };
 
-
-std::string Channel::inviteClient(Client client, std::string client_to_add, std::vector<Client> &Clients)
+std::string Channel::Invite(Client client, std::string client_to_add, std::vector<Client> &Clients)
 {
-    if (isInviteOnly())
+    for (std::vector<Client>::iterator op = _operators.begin(); op != _operators.end(); ++op)
     {
-        for (std::vector<Client>::iterator op = _operators.begin(); op != _operators.end(); ++op)
+        if (op->get_username() == client.get_username())
         {
-            if (op->get_username() == client.get_username())
+            std::vector<Client>::iterator it = _Clients.begin();
+            for (; it != _Clients.end(); ++it)
             {
-                std::vector<Client>::iterator it = _Clients.begin();
-                for (; it != _Clients.end(); ++it)
+                if (it->get_username() == client_to_add)
+                    return "you are already in the channel\n";
+            }
+            if (it == _Clients.end()) {
+                for (it = Clients.begin(); it != Clients.end(); ++it)
                 {
                     if (it->get_username() == client_to_add)
-                        return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
-                }
-                if (it == _Clients.end()) {
-                    for (it = Clients.begin(); it != Clients.end(); ++it)
                     {
-                        if (it->get_username() == client_to_add)
-                        {
-                            _Clients.push_back(*it);
-                            return client.get_username() + " added " + client_to_add + " to channel " + _ChannelName + "\n";
-                        }
+                        _Clients.push_back(*it);
+                        return "Client " + client_to_add + " joined channel " + _ChannelName + "\n";
                     }
-                    return "Client " + client_to_add + " not found\n";
                 }
-                return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
+                return "Client " + client_to_add + " not found\n";
             }
+            return "you are already in the channel\n";
         }
-        return "The channel is invite only\n";
     }
+    return "you are not an operator in channel " + _ChannelName + "\n";
+};
+
+std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
+{
+    if (isInviteOnly())
+        return "The channel is invite only\n";
     std::vector<Client>::iterator it = _Clients.begin();
     for (; it != _Clients.end(); ++it)
     {
-        if (it->get_username() == client_to_add)
+        if (it->get_username() == client.get_username())
             return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
     }
     if (it == _Clients.end()) {
         for (it = Clients.begin(); it != Clients.end(); ++it)
         {
-            if (it->get_username() == client_to_add)
+            if (it->get_username() == client.get_username())
             {
                 _Clients.push_back(*it);
-                return client.get_username() + " added " + client_to_add + " to channel " + _ChannelName + "\n";
+                return client.get_username() + " added " + client.get_username() + " to channel " + _ChannelName + "\n";
             }
         }
-        return "Client " + client_to_add + " not found\n";
+        return "Client " + client.get_username() + " not found\n";
     }
     return "Client " + client.get_username() + " already in channel " + _ChannelName + "\n";
 };
