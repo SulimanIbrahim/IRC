@@ -22,6 +22,17 @@ class Privmsg : public Commands {
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
 
+class Topic : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
+
+class Leave : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients);
+};
+
 class Join : public Commands {
     public:
         std::string execute(Client &client, std::vector<std::string> &tokens,std::vector<Channel> &Channels, std::vector<Client> &Clients);

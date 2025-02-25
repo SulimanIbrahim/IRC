@@ -17,6 +17,8 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["list"] = new List();
     _commands["mode"] = new Mode();
     _commands["invite"] = new Invite();
+    _commands["leave"] = new Leave();
+    _commands["topic"] = new Topic();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
@@ -80,10 +82,10 @@ std::string Server::ParseComands(std::string str, Client &client) {
     if (cmd == "help")
         return Commands::Help();
     if (_commands.find(cmd) != _commands.end()) {
-        if (client.isPasswordEntered() or cmd == "pass")
+        if (client.get_username() != "Client" && client.get_nick() != "Client")
             return _commands[cmd]->execute(client, tokens, Channels, Clients);
         else
-            return "\033[1;31m✗ Error: Password has not been entered\n\033[0m";
+            return "\033[1;31m✗ Error: You must authenticate first\n\033[0m";
     }
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
         return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
@@ -93,11 +95,15 @@ std::string Server::ParseComands(std::string str, Client &client) {
 
 void Server::CheckComands(std::string str, Client &client) {
     std::string response;
-    std::vector<std::string> tokens = _parser.split(str, '\n');
-    for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
-    {
-        response = ParseComands(*i, client);
-        if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
+    str = _parser.take_first_line(str);
+    // std::vector<std::string> tokens = _parser.split(str, '\n');
+    // for (std::vector<std::__cxx11::basic_string<char> >::size_type i = 0; i < tokens.size(); i++)
+        std::cout << "Client: (" << str << ")";
+    // for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
+    // {
+        response = ParseComands(str, client) + "\n\033[1;32mServer: \033[0m";
+        ssize_t bytes_sent = send(client.get_fd(), response.c_str(), response.size(), 0);
+        if (bytes_sent < 0) {
             if (errno == EPIPE) {
                 std::cerr << "Broken pipe, client disconnected" << std::endl;
                 handleDisconnections(client.get_fd());
@@ -105,7 +111,7 @@ void Server::CheckComands(std::string str, Client &client) {
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
             }
         }
-        else if (send(client.get_fd(), "\n\033[1;32mServer: \033[0m", 20, 0) < 0) {
+        else if (bytes_sent < 0) {
             if (errno == EPIPE) {
                 std::cerr << "Broken pipe, client disconnected" << std::endl;
                 handleDisconnections(client.get_fd());
@@ -114,7 +120,7 @@ void Server::CheckComands(std::string str, Client &client) {
             }
         }
 
-    }
+    // }
 }
 
 void Server::setupSocket() {
@@ -190,6 +196,8 @@ void Server::acceptClients() {
     registerClientInQueue();
     sendProgressBar(client_fd);
     sendAnimatedText(client_fd, "Welcome to the 500ISE server! Type 'auth' to authenticate\n");
+    // std::vector<std::string> tokens = Parser::split("join General", ' ');
+    // sendAnimatedText(client_fd, _commands["join"]->execute(client, tokens, Channels, Clients));
     // int bytes_sent = sendTypingEffect(client_fd, banner, 10);
 }
 

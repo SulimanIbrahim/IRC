@@ -44,6 +44,7 @@ public:
     std::string setPrivate_status(std::vector<std::string> tokens);
     std::string setOperator_status(std::vector<std::string> tokens);
     void setPassword(std::string password);
+    void leaveChannel(Client client);
     std::string getPassword();
     bool isPrivate();
     bool isInviteOnly();

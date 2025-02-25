@@ -56,8 +56,6 @@ std::string Channel::Invite(Client client, std::string client_to_add, std::vecto
 
 std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
 {
-    if (isInviteOnly())
-        return "The channel is invite only\n";
     std::vector<Client>::iterator it = _Clients.begin();
     for (; it != _Clients.end(); ++it)
     {
@@ -169,18 +167,24 @@ std::vector<Client> Channel::getClients()
 std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
 {
     if (tokens.size() > 2)
-        return "Invalid mode\n";
+        return RED "Invalid mode\n" RESET;
     if (tokens[1][0] == '+')
     {
         i = true;
         return "Invite only mode enabled\n";
+    }
+    if (tokens[1][0] == '*')
+    {
+        std::string topic = Parser::join_message(tokens);
+        setTopic(topic);
+        return GREEN "Topic set to " + topic + "\n" RESET;
     }
     if (tokens[1][0] == '-')
     {
         i = false;
         return "Invite only mode disabled\n";
     }
-    return "Invalid mode\n";
+    return RED "Invalid mode\n" RESET;
 };
 
 std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
@@ -199,7 +203,7 @@ std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
         t = false;
         return "Topic restriction mode disabled\n";
     }
-    return "Invalid mode\n";
+    return RED "Invalid mode\n" RESET;
 };
 
 std::string Channel::setPrivate_status(std::vector<std::string> tokens)
@@ -218,7 +222,7 @@ std::string Channel::setPrivate_status(std::vector<std::string> tokens)
         k = false;
         return "Password is not required\n";
     }
-    return "Invalid mode\n";
+    return RED "Invalid mode\n" RESET;
 };
 
 std::string Channel::setOperator_status(std::vector<std::string> tokens)
@@ -254,12 +258,25 @@ std::string Channel::setOperator_status(std::vector<std::string> tokens)
             }
             return "Operator " + tokens[2] + " not found\n";
         }
-    return "Invalid mode\n";
+    return RED "Invalid mode\n" RESET;
 };
 
 void Channel::setPassword(std::string password)
 {
     _Password = password;
+};
+
+void Channel::leaveChannel(Client client)
+{
+    std::vector<Client>::iterator it = _Clients.begin();
+    for (; it != _Clients.end(); ++it)
+    {
+        if (it->get_username() == client.get_username())
+        {
+            _Clients.erase(it);
+            break;
+        }
+    }
 };
 
 bool Channel::isInviteOnly()
@@ -284,7 +301,7 @@ std::string Channel::getPassword()
 
 std::string Channel::mode(Client client, std::vector<std::string> tokens) {
     if (tokens.size() > 3)
-        return "Too many arguments\n";
+        return BLUE "Mode <mode> [channel] [mode] or Mode for channel status\n" RESET;
     std::vector<Client>::iterator it = _operators.begin();
     for (; it != _operators.end(); ++it)
     {
@@ -305,7 +322,7 @@ std::string Channel::mode(Client client, std::vector<std::string> tokens) {
         return setPrivate_status(tokens);
     if (tokens[1][1] == 'o')
         return setOperator_status(tokens);
-    return "Invalid mode\n";
+    return RED "Invalid mode\n" RESET;
 }
 
 std::string Channel::status()
