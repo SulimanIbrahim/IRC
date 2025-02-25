@@ -111,14 +111,15 @@ void Server::CheckComands(std::string str, Client &client) {
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
             }
         }
-        else if (bytes_sent < 0) {
-            if (errno == EPIPE) {
-                std::cerr << "Broken pipe, client disconnected" << std::endl;
-                handleDisconnections(client.get_fd());
-            } else {
-                std::cerr << "Failed to send message" << std::endl;
-            }
-        }
+        // suliman ????????????
+        // else if (bytes_sent < 0) {
+        //     if (errno == EPIPE) {
+        //         std::cerr << "Broken pipe, client disconnected" << std::endl;
+        //         handleDisconnections(client.get_fd());
+        //     } else {
+        //         std::cerr << "Failed to send message" << std::endl;
+        //     }
+        // }
 
     // }
 }
