@@ -51,7 +51,39 @@ std::vector<std::string> Parser::split(std::string str, char delimiter) {
     if (!token.empty()) {
         tokens.push_back(token);
     }
+    // removing embty strings
+    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+        if (tokens.size() > 1 and *it == "\n") {
+            tokens.erase(it);
+        }
+    }
     return tokens;
+}
+
+std::string Parser::take_first_line(std::string str) {
+    std::string line = "";
+    for (unsigned int i = 0; i < str.size(); i++) {
+        if (str[i] == '\n') {
+            break;
+        }
+        line += str[i];
+    }
+    return line;
+}
+
+std::string Parser::join_message(std::vector<std::string> tokens) {
+    std::string message = "";
+    size_t i = 1;
+    std::string cmd = tokens[0];
+    for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
+        *it = tolower(*it);
+    if (cmd == "privmsg") {
+        i = 2;
+    }
+    for(; i < tokens.size(); i++) {
+        message += tokens[i] + " ";
+    }
+    return message;
 }
 
 int Parser::getPort() const {

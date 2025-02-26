@@ -21,7 +21,9 @@ private:
     std::vector<Client> _operators;
     std::string _Topic;
     std::string _Password;
-    bool _isPrivate;
+    bool InviteOnly;
+    bool TopicRistercted;
+    bool PasswordProtected;
 
 public:
     Channel(Client client, std::string ChannelName);
@@ -29,15 +31,26 @@ public:
     ~Channel();
 
     std::string listClients();
-    std::string inviteClient(Client client, std::string clien_to_add, std::vector<Client> &Clients);
+    std::string getChannelName();
+    std::string JoinChannel(Client client, std::vector<Client> &Clients);
+    std::string Invite(Client client, std::string clien_to_add, std::vector<Client> &Clients);
     std::string kickClient(Client client, std::string clien_to_kick);
     void sendMessage(std::string message, Client &client);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);
     std::string showTopic(Client client);
-    std::string setTopic(Client client, std::string topic);
-    std::string getChannelName();
-    bool isPrivate();
+    void setTopic(std::string topic);
+    std::string setInviteOnly_status(std::vector<std::string> tokens);
+    std::string setTopicRisterction_status(std::vector<std::string> tokens);
+    std::string setPrivate_status(std::vector<std::string> tokens);
+    std::string setOperator_status(std::vector<std::string> tokens);
+    void setPassword(std::string password);
+    void leaveChannel(Client client);
     std::string getPassword();
+    bool isPrivate();
+    bool isInviteOnly();
+    bool isTopicRisterction();
+    std::string mode(Client client, std::vector<std::string> tokens);
+    std::string status();
     std::vector<Client> getClients();
 };
 

@@ -47,10 +47,11 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
-#if defined(__LINUX__)
-    #include <kqueue/sys/event.h>
-#else
+#include <signal.h>
+#if defined(__APPLE__) && defined(__MACH__)
     #include <sys/event.h>
+#else
+    #include <kqueue/sys/event.h>
 #endif
 #include <sys/un.h>
 #include <sys/time.h>

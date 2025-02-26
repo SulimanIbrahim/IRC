@@ -4,7 +4,8 @@ Auth::~Auth() {
     
 }
 
-std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password) {
+std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &ignore_Clients) {
+    (void)ignore_Clients;
     if (client.isPasswordEntered()) {
         return "\033[1;31m✗ Error: Password has already been entered\n\033[0m";
     }
@@ -25,7 +26,7 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
     return "\033[1;31m✗ Error: Password is incorrect\n\033[0m";
 }
 
-std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore) {
+std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore, std::vector<Client> &Clients) {
     (void)ignore;
     if (!client.isPasswordEntered()) {
         return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
@@ -40,8 +41,8 @@ std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>
     }
 
     std::string nickname = tokens[1];
-    if (nickname.empty()) {
-        return "\033[1;31m✗ Error: Nickname cannot be empty\n\033[0m";
+    if (nickname.empty() or nickname == "Client") {
+        return "\033[1;31m✗ Error: Invalid nickname\n\033[0m";
     }
 
     if (nickname.size() > 9) {
@@ -51,19 +52,23 @@ std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>
     if (client.get_nick() == nickname) {
         return "\033[1;33mℹ Notice: Nickname is already set to '" + nickname + "'\n\033[0m";
     }
-
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        if (it->get_nick() == nickname) {
+            return "\033[1;31m✗ Error: Nickname is already taken\n\033[0m";
+        }
+    }
     client.set_nick(nickname);
     return "\033[1;32m✓ Nickname set to '" + nickname + "'! Now use USER to set your username\n\033[0m";       
 }
 
 
-std::string User::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore) {
+std::string User::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore, std::vector<Client> &Clients) {
     (void)ignore;
     if (!client.isPasswordEntered()) {
         return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
     }
 
-    if (client.get_nick().empty()) {
+    if (client.get_nick().empty() or client.get_nick() == "Client") {
         return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
     }
 
@@ -76,8 +81,8 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
     }
 
     std::string username = tokens[1];
-    if (username.empty()) {
-        return "\033[1;31m✗ Error: Username cannot be empty\n\033[0m";
+    if (username.empty() or username == "Client") {
+        return "\033[1;31m✗ Error: Invalid username\n\033[0m";
     }
 
     if (username.size() > 9) {
@@ -86,6 +91,11 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
 
     if (client.get_username() == username) {
         return "\033[1;33mℹ Notice: Username is already set to '" + username + "'\n\033[0m";
+    }
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        if (it->get_username() == username) {
+            return "\033[1;31m✗ Error: Username is already taken\n\033[0m";
+        }
     }
 
     client.set_username(username);
