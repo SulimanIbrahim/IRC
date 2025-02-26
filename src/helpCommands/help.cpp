@@ -18,7 +18,7 @@ std::string Commands::Help() {
             "\033[1;37mChannel Commands [Operator]:\n"
             "  \033[1;33mTOPIC \033[0m                  to check the topic of the channel\n"
             "  \033[1;33mLIST\033[0m                    List users in current channel\n"
-            "  \033[1;33mINVITE\033[0m<user>            Invite user to channel\n"
+            "  \033[1;33mINVITE \033[0m<user>           Invite user to channel\n"
             "  \033[1;33mKICK \033[0m<user>             Kick user from channel\n"
             "\033[1;37mMode Commands:\n"
             "  \033[1;33mMODE\033[0m                    to check the status of the channel\n"
