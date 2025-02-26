@@ -6,9 +6,9 @@ Channel::Channel(Client client, std::string ChannelName): _ChannelName(ChannelNa
     _operators.push_back(client);
     _Topic = "";
     _Password = "";
-    i = false;
-    t = false;
-    k = false;
+    InviteOnly = false;
+    TopicRistercted = false;
+    PasswordProtected = false;
 };
 
 Channel::Channel(Client client, std::string ChannelName, std::string password): _ChannelName(ChannelName), _Password(password)
@@ -16,9 +16,9 @@ Channel::Channel(Client client, std::string ChannelName, std::string password): 
     _Clients.push_back(client);
     _operators.push_back(client);
     _Topic = "";
-    i = false;
-    t = false;
-    k = true;
+    InviteOnly = false;
+    TopicRistercted = false;
+    PasswordProtected = true;
 };
 
 Channel::~Channel()
@@ -170,7 +170,7 @@ std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
         return RED "Invalid mode\n" RESET;
     if (tokens[1][0] == '+')
     {
-        i = true;
+        InviteOnly = true;
         return "Invite only mode enabled\n";
     }
     if (tokens[1][0] == '*')
@@ -181,7 +181,7 @@ std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
     }
     if (tokens[1][0] == '-')
     {
-        i = false;
+        InviteOnly = false;
         return "Invite only mode disabled\n";
     }
     return RED "Invalid mode\n" RESET;
@@ -195,12 +195,12 @@ std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
         return "Topic required\n";
     if (tokens[1][0] == '+')
     {
-        t = true;
+        TopicRistercted = true;
         return "Topic restriction mode enabled\n";
     }
     if (tokens[1][0] == '-')
     {
-        t = false;
+        TopicRistercted = false;
         return "Topic restriction mode disabled\n";
     }
     return RED "Invalid mode\n" RESET;
@@ -214,12 +214,12 @@ std::string Channel::setPrivate_status(std::vector<std::string> tokens)
         return "Password required\n";
     if (tokens[1][0] == '+')
     {
-        k = true;
+        PasswordProtected = true;
         return "Password is required\n";
     }
     if (tokens[1][0] == '-')
     {
-        k = false;
+        PasswordProtected = false;
         return "Password is not required\n";
     }
     return RED "Invalid mode\n" RESET;
@@ -281,17 +281,17 @@ void Channel::leaveChannel(Client client)
 
 bool Channel::isInviteOnly()
 {
-    return i;
+    return InviteOnly;
 };
 
 bool Channel::isTopicRisterction()
 {
-    return t;
+    return TopicRistercted;
 };
 
 bool Channel::isPrivate()
 {
-    return k;
+    return PasswordProtected;
 };
 
 std::string Channel::getPassword()
@@ -329,13 +329,13 @@ std::string Channel::status()
 {
     std::string status = BLUE;
     status += "Invite only mode: ";
-    status += i ? "enabled" : "disabled";
+    status += InviteOnly ? "enabled" : "disabled";
     status += "\n";
     status += "Topic restriction mode: ";
-    status += t ? "enabled" : "disabled";
+    status += TopicRistercted ? "enabled" : "disabled";
     status += "\n";
     status += "Password: ";
-    status += k ? "required" : "not required";
+    status += PasswordProtected ? "required" : "not required";
     status += RESET;
     return status;
 };

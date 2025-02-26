@@ -21,9 +21,9 @@ private:
     std::vector<Client> _operators;
     std::string _Topic;
     std::string _Password;
-    bool i;
-    bool t;
-    bool k;
+    bool InviteOnly;
+    bool TopicRistercted;
+    bool PasswordProtected;
 
 public:
     Channel(Client client, std::string ChannelName);
