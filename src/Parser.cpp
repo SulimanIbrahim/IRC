@@ -48,15 +48,15 @@ std::vector<std::string> Parser::split(std::string str, char delimiter) {
             token += str[i];
         }
     }
-    if (!token.empty()) {
+    if (!token.empty() && delimiter != '\n') {
         tokens.push_back(token);
     }
     // removing embty strings
-    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
-        if (tokens.size() > 1 and *it == "\n") {
-            tokens.erase(it);
-        }
-    }
+    // for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+    //     if (tokens.size() > 1 and *it == "\n") {
+    //         tokens.erase(it);
+    //     }
+    // }
     return tokens;
 }
 

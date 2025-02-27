@@ -63,4 +63,23 @@ class Mode : public Commands {
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
 
+class Cap : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+class Ping : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
+class Quit : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
+class Notice : public Commands {
+    public:
+        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+};
+
 #endif

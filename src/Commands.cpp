@@ -1,4 +1,5 @@
 #include "../include/Commands.hpp"
+#include "../include/Server.hpp"
 
 
 Commands::~Commands() {
@@ -158,4 +159,68 @@ std::string Mode::execute(Client &client, std::vector<std::string> &tokens, std:
         }
     }
     return "the channel " + client.getChannel() + " does not exist\n";
+}
+
+std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+    (void)Ignore_Clients;
+    (void)Channels;
+    (void)client;
+    
+    std::string command = tokens[0];
+    for (std::string::iterator it = command.begin(); it != command.end(); ++it) {
+        *it = toupper(*it);
+    }
+
+    if (command == "CAP") {
+        if (tokens.size() >= 2) {
+            std::string subcommand = tokens[1];
+            for (std::string::iterator it = subcommand.begin(); it != subcommand.end(); ++it) {
+                *it = toupper(*it);
+            }
+
+            if (subcommand == "LS") {
+                return ":" + std::string(SERVER_NAME) + " CAP * LS :multi-prefix\r\n";
+            } else if (subcommand == "REQ") {
+                return ":" + std::string(SERVER_NAME) + " CAP * ACK :multi-prefix\r\n";
+            } else if (subcommand == "END") {
+                return ""; // Silently acknowledge CAP END
+            }
+        }
+    }
+    return "";
+}
+
+
+std::string Ping::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+    (void)Ignore_Clients;
+    (void)Channels;
+    if (tokens.size() < 1){
+        std::cerr << "PING command requires at least 1 argument\n";
+    }
+    else if (tokens.size() >= 2 && tokens[0] == "PING") {
+        std::string response = "PONG " + tokens[1] + "\r\n";
+        if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
+            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+        }
+    }
+    return "";
+}
+
+std::string Notice::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+    (void)Ignore_Clients;
+    (void)Channels;
+    (void)client;
+    if (tokens.size() < 2) {
+        return "Not enough arguments\n";
+    }
+    std::string message = Parser::join_message(tokens);
+    return "Notice: " + message + "\n";
+}
+
+std::string Quit::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
+    (void)Ignore_Clients;
+    (void)client;
+    (void)Channels;
+    (void)tokens;
+    return "Goodbye\n";
 }

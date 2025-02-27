@@ -19,6 +19,9 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["invite"] = new Invite();
     _commands["leave"] = new Leave();
     _commands["topic"] = new Topic();
+    _commands["cap"] = new Cap();
+    _commands["notice"] = new Notice();
+    _commands["ping"] = new Ping();
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
@@ -51,24 +54,24 @@ Server::~Server() {
 //     return bytes_sent;
 // }
 
-static void sendProgressBar(int client_fd) {
-    std::string bar = "\033[1;34mLoading: [";
-    send(client_fd, bar.c_str(), bar.size(), 0);
-    for (int i = 0; i < 20; i++) {
-        send(client_fd, "=", 1, 0);
-        usleep(200000); // 0.3 seconds delay
-    }
-    send(client_fd, "] Done!\n\033[0m", 11, 0);
-}
+// static void sendProgressBar(int client_fd) {
+//     std::string bar = "\033[1;34mLoading: [";
+//     send(client_fd, bar.c_str(), bar.size(), 0);
+//     for (int i = 0; i < 20; i++) {
+//         send(client_fd, "=", 1, 0);
+//         usleep(200000); // 0.3 seconds delay
+//     }
+//     send(client_fd, "] Done!\n\033[0m", 11, 0);
+// }
 
-static void sendAnimatedText(int client_fd, std::string message) {
-    for (size_t i = 0; i < message.size(); i++) {
-        std::string temp = "\r" + message.substr(0, i+1);
-        send(client_fd, temp.c_str(), temp.size(), 0);
-        usleep(10000); // 0.1 sec delay
-    }
-    send(client_fd, "\n\033[1;32mServer: \033[0m", 20, 0);
-}
+// static void sendAnimatedText(int client_fd, std::string message) {
+//     for (size_t i = 0; i < message.size(); i++) {
+//         std::string temp = "\r" + message.substr(0, i+1);
+//         send(client_fd, temp.c_str(), temp.size(), 0);
+//         usleep(10000); // 0.1 sec delay
+//     }
+//     send(client_fd, "\n\033[1;32mServer: \033[0m", 20, 0);
+// }
 
 std::string Server::ParseComands(std::string str, Client &client) {
     if (str.empty())
@@ -77,31 +80,37 @@ std::string Server::ParseComands(std::string str, Client &client) {
     std::string cmd = tokens[0];
     for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
         *it = tolower(*it);
+
+    // Allow CAP negotiation before authentication
+    if (cmd == "cap")
+        return _commands["cap"]->execute(client, tokens, Channels, Clients);
+
+    // If client is not authenticated, only allow authentication commands
+    // if (!client.isAuthenticated()) {
+        if (_auth_commands.find(cmd) != _auth_commands.end()) {
+            return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
+        }
+        // return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
+    // }
+
     if (cmd == "auth")
         return Commands::AuthMsg();
     if (cmd == "help")
         return Commands::Help();
     if (_commands.find(cmd) != _commands.end()) {
-        if (client.get_username() != "Client" && client.get_nick() != "Client")
             return _commands[cmd]->execute(client, tokens, Channels, Clients);
-        else
-            return "\033[1;31m✗ Error: You must authenticate first\n\033[0m";
-    }
-    if (_auth_commands.find(cmd) != _auth_commands.end()) {
-        return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
     }
     return "\033[1;31m✗ Error: Invalid command. Type HELP to see available commands\n\033[0m";
 }
 
 void Server::CheckComands(std::string str, Client &client) {
     std::string response;
-    str = _parser.take_first_line(str);
-    // std::vector<std::string> tokens = _parser.split(str, '\n');
-    // for (std::vector<std::__cxx11::basic_string<char> >::size_type i = 0; i < tokens.size(); i++)
-        std::cout << "Client: (" << str << ")";
-    // for (std::vector<std::string>::iterator i = tokens.begin(); i != tokens.end(); ++i)
-    // {
-        response = ParseComands(str, client) + "\n\033[1;32mServer: \033[0m";
+    std::vector<std::string> tokens;
+    tokens = _parser.split(str, '\n');
+    // str = _parser.take_first_line(str);
+    // for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+    //     std::cout << "(" << *it << ")" << std::endl;
+        response = ParseComands(str, client);
         ssize_t bytes_sent = send(client.get_fd(), response.c_str(), response.size(), 0);
         if (bytes_sent < 0) {
             if (errno == EPIPE) {
@@ -111,17 +120,8 @@ void Server::CheckComands(std::string str, Client &client) {
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
             }
         }
-        // suliman ????????????
-        // else if (bytes_sent < 0) {
-        //     if (errno == EPIPE) {
-        //         std::cerr << "Broken pipe, client disconnected" << std::endl;
-        //         handleDisconnections(client.get_fd());
-        //     } else {
-        //         std::cerr << "Failed to send message" << std::endl;
-        //     }
-        // }
-
     // }
+    return;
 }
 
 void Server::setupSocket() {
@@ -195,8 +195,8 @@ void Server::acceptClients() {
     Client client(client_fd);
     Clients.push_back(client);
     registerClientInQueue();
-    sendProgressBar(client_fd);
-    sendAnimatedText(client_fd, "Welcome to the 500ISE server! Type 'auth' to authenticate\n");
+    // sendProgressBar(client_fd);
+    // sendAnimatedText(client_fd, "Welcome to the 500ISE server! Type 'auth' to authenticate\n");
     // std::vector<std::string> tokens = Parser::split("join General", ' ');
     // sendAnimatedText(client_fd, _commands["join"]->execute(client, tokens, Channels, Clients));
     // int bytes_sent = sendTypingEffect(client_fd, banner, 10);
