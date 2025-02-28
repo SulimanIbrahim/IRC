@@ -1,93 +1,84 @@
 #include "../include/Auth.hpp"
+#include "../include/Server.hpp"
+
 
 Auth::~Auth() {
     
 }
 
-std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password) {
-    if (client.isPasswordEntered()) {
-        return "\033[1;31m✗ Error: Password has already been entered\n\033[0m";
-    }
+static std::string sendWelcomeMessage(Client &client) {
+    std::string welcome;
+    std::string userhost = client.get_nick() + "!" + client.get_username() + "@" + client.get_hostname();
+    welcome = ":" + std::string(SERVER_NAME) + " 001 " + client.get_nick() + " :Welcome to the Internet Relay Network " + userhost + "\r\n";
+    welcome += ":" + std::string(SERVER_NAME) + " 002 " + client.get_nick() + " :Your host is " + std::string(SERVER_NAME) + ", running version 1.0\r\n";
+    welcome += ":" + std::string(SERVER_NAME) + " 003 " + client.get_nick() + " :This server was created today\r\n";
+    welcome += ":" + std::string(SERVER_NAME) + " 004 " + client.get_nick() + " " + std::string(SERVER_NAME) + " 1.0 o o\r\n";
+    return welcome;
+}
 
-    if (tokens.size() == 1 || tokens.size() > 2) {
-        return "\033[1;36m╔═══════════════════════════════╗\n"
-               "║      \033[1;33mPASS Command Usage      \033[1;36m║\n"
-               "╚═══════════════════════════════╝\n"
-               "\033[1;37mSyntax: \033[1;33mPASS \033[0m<password>\n"
-               "\033[0;37mSet your password to authenticate with the server\n\033[0m";
-    }
+std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &ignore_Clients) {
+    (void)ignore_Clients;
 
+    if (tokens.size() < 2) {
+        return ":" + std::string(SERVER_NAME) + " 461 * PASS :Not enough parameters\r\n";
+    }
+    // if (client.isPasswordEntered()) {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
+    std::cout << "Password entered: " << tokens[1] << std::endl;
+    std::cout << "Password expected: " << password << std::endl;
     if (password == tokens[1]) {
         client.setPasswordEntered(true);
-        return "\033[1;32m✓ Password accepted! Now use NICK to set your nickname\n\033[0m";
+        return "332 * :You may now register\r\n";
     }
 
-    return "\033[1;31m✗ Error: Password is incorrect\n\033[0m";
+    return ":" + std::string(SERVER_NAME) + " 464 * :Password incorrect\r\n";
 }
 
-std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore) {
-    (void)ignore;
-    if (!client.isPasswordEntered()) {
-        return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
+std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
+    (void)password;
+    if (tokens.size() < 2) {
+        return ":" + std::string(SERVER_NAME) + " 431 * :No nickname given\r\n";
     }
 
-    if (tokens.size() == 1 || tokens.size() > 2) {
-        return "\033[1;36m╔═══════════════════════════════╗\n"
-            "║      \033[1;33mNICK Command Usage      \033[1;36m║\n"
-            "╚═══════════════════════════════╝\n"
-            "\033[1;37mSyntax: \033[1;33mNICK \033[0m<nickname>\n"
-            "\033[0;37mSet your nickname (max 9 characters)\n\033[0m";
+    // Check if nickname is already in use
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        // if (it->get_nick() == tokens[1]) {
+        //     return ":" + std::string(SERVER_NAME) + " 433 * " + tokens[1] + " :Nickname is already in use\r\n";
+        // }
     }
 
-    std::string nickname = tokens[1];
-    if (nickname.empty()) {
-        return "\033[1;31m✗ Error: Nickname cannot be empty\n\033[0m";
+    client.set_nick(tokens[1]);
+    
+    // If we have both NICK and USER, complete registration
+    if (client.get_nick() != "") {
+        // client.setRegistered(true);
+        return sendWelcomeMessage(client);
     }
-
-    if (nickname.size() > 9) {
-        return "\033[1;31m✗ Error: Nickname cannot be longer than 9 characters\n\033[0m";
-    }
-
-    if (client.get_nick() == nickname) {
-        return "\033[1;33mℹ Notice: Nickname is already set to '" + nickname + "'\n\033[0m";
-    }
-
-    client.set_nick(nickname);
-    return "\033[1;32m✓ Nickname set to '" + nickname + "'! Now use USER to set your username\n\033[0m";       
+    return "";
 }
 
-
-std::string User::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string ignore) {
-    (void)ignore;
-    if (!client.isPasswordEntered()) {
-        return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
+std::string User::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
+    (void)password;
+    (void)Clients;
+    
+    if (tokens.size() < 5) {
+        return ":" + std::string(SERVER_NAME) + " 461 * USER :Not enough parameters\r\n";
     }
 
-    if (client.get_nick().empty()) {
-        return "\033[1;31m✗ Error: You must set a nickname first (use NICK command)\n\033[0m";
+    if (client.get_username() != "") {
+        return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
     }
 
-    if (tokens.size() == 1 || tokens.size() > 2) {
-        return "\033[1;36m╔═══════════════════════════════╗\n"
-               "║      \033[1;33mUSER Command Usage      \033[1;36m║\n"
-               "╚═══════════════════════════════╝\n"
-               "\033[1;37mSyntax: \033[1;33mUSER \033[0m<username>\n"
-               "\033[0;37mSet your username (max 9 characters)\n\033[0m";
-    }
+    client.set_username(tokens[1]);
+    client.set_hostname(tokens[3]);
+    client.set_realname(tokens[4]);
 
-    std::string username = tokens[1];
-    if (username.empty()) {
-        return "\033[1;31m✗ Error: Username cannot be empty\n\033[0m";
-    }
 
-    if (username.size() > 9) {
-        return "\033[1;31m✗ Error: Username cannot be longer than 9 characters\n\033[0m";
+    // If we have both NICK and USER, complete registration
+    if (client.get_nick() != "") {
+        // client.setRegistered(true);
+        return sendWelcomeMessage(client);
     }
-
-    if (client.get_username() == username) {
-        return "\033[1;33mℹ Notice: Username is already set to '" + username + "'\n\033[0m";
-    }
-
-    client.set_username(username);
-    return "\033[1;32m✓ Username set to '" + username + "'! Registration complete! ✨\n\033[0m";
+    return "";
 }

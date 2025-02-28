@@ -5,25 +5,40 @@ Client::Client(int _clientSockets, std::string ip):password_entered(false), _use
     std::cout << "Client socket: " << _clientSockets << std::endl;
     _fd = _clientSockets;
     _ip = ip;
-    _username = "Client";
-    _nickname = "Client";
+    _username = "";
+    _nickname = "";
+    _realname = "";
+    _hostname = "";
     at_channel = "General";
 }
 Client::~Client()
 {
-    std::cout << "Client destructor" << std::endl;
-    std::cout << "Client Disconnected" << std::endl;
-    // close(_fd);
+    std::cout << "Client destructor has been called" << std::endl;
 }
+
+Client::Client(const Client &client)
+{
+    std::cout << "Client copy constructor" << std::endl;
+    _fd = client._fd;
+    _username = client._username;
+    _nickname = client._nickname;
+    at_channel = client.at_channel;
+    password_entered = client.password_entered;
+}
+
+bool Client::isAuthentificated()
+{
+    if (_username != "" && _nickname != "" && password_entered)
+        return true;
+    return false;
+};
 
 void Client::set_nick(std::string nickname)
 {
-    // adding a parsing function to check if the nickname is valid
     _nickname = nickname;
 };
 void Client::set_username(std::string username)
 {
-    // adding a parsing function to check if the username is valid
     _username = username;
 };
 
@@ -61,4 +76,25 @@ bool Client::isPasswordEntered()
 void Client::setPasswordEntered(bool value)
 {
     password_entered = value;
+};
+
+void Client::set_realname(std::string realname)
+{
+    _realname = realname;
+};
+
+std::string Client::get_realname()
+{
+    return _realname;
+};
+
+void Client::set_hostname(std::string hostname)
+{
+    _hostname = hostname;
+};
+
+
+std::string Client::get_hostname()
+{
+    return _hostname;
 };
