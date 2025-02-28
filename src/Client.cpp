@@ -25,6 +25,13 @@ Client::Client(const Client &client)
     password_entered = client.password_entered;
 }
 
+bool Client::isAuthentificated()
+{
+    if (_username != "" && _nickname != "" && password_entered)
+        return true;
+    return false;
+};
+
 void Client::set_nick(std::string nickname)
 {
     _nickname = nickname;

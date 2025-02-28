@@ -80,23 +80,22 @@ std::string Server::ParseComands(std::string str, Client &client) {
     std::string cmd = tokens[0];
     for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
         *it = tolower(*it);
-
+    std::cout << "Command: " << cmd << std::endl;
     // Allow CAP negotiation before authentication
     if (cmd == "cap")
         return _commands["cap"]->execute(client, tokens, Channels, Clients);
-
-    // If client is not authenticated, only allow authentication commands
-    // if (!client.isAuthenticated()) {
-        if (_auth_commands.find(cmd) != _auth_commands.end()) {
-            return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
-        }
-        // return "\033[1;31m✗ Error: You must enter the password first (use PASS command)\n\033[0m";
-    // }
+    if (cmd == "join" && tokens[1] == ":")
+        return "Created and joined channel " + tokens[1] + "\n";
+    if (_auth_commands.find(cmd) != _auth_commands.end()) {
+        return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
+    }
 
     if (cmd == "auth")
         return Commands::AuthMsg();
     if (cmd == "help")
         return Commands::Help();
+    if (!client.isAuthentificated())
+        return "\033[1;31m✗ Error: You must authenticate first\n\033[0m";
     if (_commands.find(cmd) != _commands.end()) {
             return _commands[cmd]->execute(client, tokens, Channels, Clients);
     }
@@ -108,9 +107,9 @@ void Server::CheckComands(std::string str, Client &client) {
     std::vector<std::string> tokens;
     tokens = _parser.split(str, '\n');
     // str = _parser.take_first_line(str);
-    // for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
-    //     std::cout << "(" << *it << ")" << std::endl;
-        response = ParseComands(str, client);
+    for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+        // std::cout << "(" << *it << ")" << std::endl;
+        response = ParseComands(*it, client);
         ssize_t bytes_sent = send(client.get_fd(), response.c_str(), response.size(), 0);
         if (bytes_sent < 0) {
             if (errno == EPIPE) {
@@ -120,7 +119,7 @@ void Server::CheckComands(std::string str, Client &client) {
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
             }
         }
-    // }
+    }
     return;
 }
 
@@ -252,7 +251,7 @@ void Server::handleEvents() {
 }
 
 void Server::processMessage(Client &client, std::string message) {
-    std::cout << "Received message from client: " << message << std::endl;
+    std::cout << "Received message from client:(" << message << ")"<< std::endl;
     CheckComands(message, client);
 }
 
@@ -268,8 +267,10 @@ void Server::handleClientMessage(Client &client) {
             }
         }
     }
-    buffer[bytes + 1] = '\0';
+    buffer[bytes] = '\0';
     std::string message(buffer);
+    // std::replace(message.begin(), message.end(), '\n', ' ');
+    std::replace(message.begin(), message.end(), '\r', ' ');
     processMessage(client, message);
 }
 

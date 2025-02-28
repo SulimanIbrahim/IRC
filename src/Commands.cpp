@@ -183,7 +183,7 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
             } else if (subcommand == "REQ") {
                 return ":" + std::string(SERVER_NAME) + " CAP * ACK :multi-prefix\r\n";
             } else if (subcommand == "END") {
-                return ""; // Silently acknowledge CAP END
+                return "";
             }
         }
     }

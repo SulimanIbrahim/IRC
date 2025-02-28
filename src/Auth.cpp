@@ -18,18 +18,18 @@ static std::string sendWelcomeMessage(Client &client) {
 
 std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &ignore_Clients) {
     (void)ignore_Clients;
-    
-    if (tokens.size() != 2) {
+
+    if (tokens.size() < 2) {
         return ":" + std::string(SERVER_NAME) + " 461 * PASS :Not enough parameters\r\n";
     }
-
-    if (client.isPasswordEntered()) {
-        return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
-    }
-
+    // if (client.isPasswordEntered()) {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
+    std::cout << "Password entered: " << tokens[1] << std::endl;
+    std::cout << "Password expected: " << password << std::endl;
     if (password == tokens[1]) {
         client.setPasswordEntered(true);
-        return "";
+        return "332 * :You may now register\r\n";
     }
 
     return ":" + std::string(SERVER_NAME) + " 464 * :Password incorrect\r\n";
@@ -37,21 +37,21 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
 
 std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
     (void)password;
-    if (tokens.size() != 2) {
+    if (tokens.size() < 2) {
         return ":" + std::string(SERVER_NAME) + " 431 * :No nickname given\r\n";
     }
 
     // Check if nickname is already in use
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_nick() == tokens[1]) {
-            return ":" + std::string(SERVER_NAME) + " 433 * " + tokens[1] + " :Nickname is already in use\r\n";
-        }
+        // if (it->get_nick() == tokens[1]) {
+        //     return ":" + std::string(SERVER_NAME) + " 433 * " + tokens[1] + " :Nickname is already in use\r\n";
+        // }
     }
 
     client.set_nick(tokens[1]);
     
     // If we have both NICK and USER, complete registration
-    if (client.get_username() != "") {
+    if (client.get_nick() != "") {
         // client.setRegistered(true);
         return sendWelcomeMessage(client);
     }
@@ -73,6 +73,7 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
     client.set_username(tokens[1]);
     client.set_hostname(tokens[3]);
     client.set_realname(tokens[4]);
+
 
     // If we have both NICK and USER, complete registration
     if (client.get_nick() != "") {

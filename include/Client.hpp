@@ -36,6 +36,7 @@ class Client {
         void set_hostname(std::string hostname);
         void setPasswordEntered(bool value);
         void setChannel(std::string channel);
+        bool isAuthentificated();
         std::string getChannel();
         int get_fd();
         std::string get_nick();
