@@ -4,8 +4,10 @@ Client::Client(int _clientSockets):password_entered(false), _username(""), _nick
     std::cout << "Client constructor" << std::endl;
     std::cout << "Client socket: " << _clientSockets << std::endl;
     _fd = _clientSockets;
-    _username = "Client";
-    _nickname = "Client";
+    _username = "";
+    _nickname = "";
+    _realname = "";
+    _hostname = "";
     at_channel = "General";
 }
 Client::~Client()
@@ -22,6 +24,13 @@ Client::Client(const Client &client)
     at_channel = client.at_channel;
     password_entered = client.password_entered;
 }
+
+bool Client::isAuthentificated()
+{
+    if (_username != "" && _nickname != "" && password_entered)
+        return true;
+    return false;
+};
 
 void Client::set_nick(std::string nickname)
 {
@@ -61,4 +70,25 @@ bool Client::isPasswordEntered()
 void Client::setPasswordEntered(bool value)
 {
     password_entered = value;
+};
+
+void Client::set_realname(std::string realname)
+{
+    _realname = realname;
+};
+
+std::string Client::get_realname()
+{
+    return _realname;
+};
+
+void Client::set_hostname(std::string hostname)
+{
+    _hostname = hostname;
+};
+
+
+std::string Client::get_hostname()
+{
+    return _hostname;
 };

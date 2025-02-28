@@ -20,7 +20,9 @@ class Client {
         bool password_entered;
         int _fd;
         std::string _username;
+        std::string _realname;
         std::string _nickname;
+        std::string _hostname;
         std::string at_channel;
 
     public:
@@ -30,12 +32,17 @@ class Client {
 
         void set_nick(std::string nickname);
         void set_username(std::string username);
+        void set_realname(std::string realname);
+        void set_hostname(std::string hostname);
         void setPasswordEntered(bool value);
         void setChannel(std::string channel);
+        bool isAuthentificated();
         std::string getChannel();
         int get_fd();
         std::string get_nick();
         std::string get_username();
+        std::string get_realname();
+        std::string get_hostname();
         bool isPasswordEntered();
 };
 

@@ -26,10 +26,20 @@ endif
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(KQUEUE)
 
 run: all
-	./$(NAME) 4444 123
+	./$(NAME) 6667 123
 
 nc:
-	nc 127.0.0.1 4444 
+	nc 127.0.0.1 6667 
+
+irssi: rmirssi
+	docker run -it --name irssi-container -e TERM -u $(id -u):$(id -g) \
+	--log-driver=none \
+    -v ${HOME}/.irssi:/home/user/.irssi:ro \
+    irssi
+
+rmirssi:
+	docker rm -f irssi-container 2>/dev/null
+
 
 all: $(NAME)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) $(KQUEUE)

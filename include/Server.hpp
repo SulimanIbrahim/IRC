@@ -57,6 +57,7 @@
 #include <sys/time.h>
 #include <map>
 
+#define SERVER_NAME "ft_irc"
 
 class Server {
 private:
