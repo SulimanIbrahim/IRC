@@ -31,14 +31,23 @@ run: all
 nc:
 	nc 127.0.0.1 6667 
 
-irssi: rmirssi
-	docker run -it --name irssi-container -e TERM -u $(id -u):$(id -g) \
+irssi1:
+	docker run -it --name irssi-sender -e TERM -u $(shell id -u):$(shell id -g) \
 	--log-driver=none \
-    -v ${HOME}/.irssi:/home/user/.irssi:ro \
-    irssi
+	-v ${HOME}/.irssi-sender:/home/user/.irssi \
+	irssi
 
-rmirssi:
-	docker rm -f irssi-container 2>/dev/null
+irssi2:
+	docker run -it --name irssi-receiver -e TERM -u $(shell id -u):$(shell id -g) \
+	--log-driver=none \
+	-v ${HOME}/.irssi-receiver:/home/user/.irssi \
+	irssi
+
+rmirssi1:
+	docker rm -f irssi-sender 2>/dev/null
+
+rmirssi2:
+	docker rm -f irssi-receiver 2>/dev/null
 
 
 all: $(NAME)

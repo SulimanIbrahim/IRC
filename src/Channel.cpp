@@ -136,76 +136,50 @@ std::string Channel::kickClient(Client client, std::string client_to_kick)
 
 std::string Channel::sendDCCRequest(std::string filename, Client &client, std::string to)
 {
-    std::string message_to_send = client.get_username() + " wants to send you a file: " + filename + "\n";
-    for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
-    {
-        if (it->get_username() == to)
-        {
-            DCCRequest request = {filename, client.get_ip(), 0, 20, false};
-            _dcc_requests[to] = request;
-            if (send(it->get_fd(), message_to_send.c_str(), message_to_send.size(), 0) < 0)
-                return "Failed to send message\n";
+    // Find the recipient
+    Client* recipient = NULL;
+    for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it) {
+        if (it->get_username() == to) {
+            recipient = &(*it);
+            break;
         }
     }
-    return "Client " + to + " not found in channel " + _ChannelName + "\n";
-};
-
-std::string Channel::acceptDCCRequest(std::string client, std::string filename)
-{
-    std::map<std::string, DCCRequest>::iterator it = _dcc_requests.find(client);
-    if (it != _dcc_requests.end())
-    {
-        if (it->second.filename == filename)
-        {
-            it->second.accepted = true;
-            return setupDCC_Connection(client, filename);
-        }
+    
+    if (!recipient) {
+        return "Error: Client " + to + " not found in channel " + _ChannelName + "\n";
     }
-    return "NO REQUEST FOUND\n";
-};
-
-std::string Channel::setupDCC_Connection(std::string client, std::string filename)
-{
-    std::map<std::string, DCCRequest>::iterator it = _dcc_requests.find(client);
-    if (it != _dcc_requests.end())
-    {
-        if (it->second.filename == filename)
-        {
-            if (it->second.accepted)
-            {
-                sockaddr_in client_addr;
-                client_addr.sin_family = AF_INET;
-                client_addr.sin_port = htons(it->second.port);
-                inet_pton(AF_INET, it->second.ip.c_str(), &client_addr.sin_addr);
-                int dcc_fd = socket(AF_INET, SOCK_STREAM, 0);
-                if (dcc_fd < 0)
-                    return "Failed to create socket\n";
-                if (connect(dcc_fd, (struct sockaddr*)&client_addr, sizeof(client_addr)) < 0)
-                    return "Failed to connect to client\n";
-                if (send(dcc_fd, "DCC ACCEPTED\n", 13, 0) < 0)
-                    return "Failed to send message\n";
-                return "DCC connection established\n";
-            }
-            return "DCC request not accepted\n";
-        }
+    
+    // Format the DCC SEND message according to IRC protocol
+    // Format: :<sender> PRIVMSG <recipient> :<DCC SEND filename ipaddress port filesize>
+    unsigned long ip = inet_addr(client.get_ip().c_str());
+    
+    // In a real DCC implementation, the sender would open a port and listen
+    // For simplicity, we'll use a placeholder port
+    int port = 12345; // This would normally be dynamically assigned
+    
+    // Get file size
+    FILE *file = fopen(filename.c_str(), "rb");
+    if (!file) {
+        return "Error: File " + filename + " not found\n";
     }
-    return "NO REQUEST FOUND\n";
-};
-
-
-std::string Channel::rejectDCCRequest(std::string client, std::string filename)
-{
-    std::map<std::string, DCCRequest>::iterator it = _dcc_requests.find(client);
-    if (it != _dcc_requests.end())
-    {
-        if (it->second.filename == filename)
-        {
-            it->second.accepted = false;
-            return "DCC request rejected\n";
-        }
+    fseek(file, 0, SEEK_END);
+    unsigned long filesize = ftell(file);
+    fclose(file);
+    
+    // Create the DCC SEND message
+    std::string dcc_msg = ":" + client.get_username() + " PRIVMSG " + to + 
+                         " :\001DCC SEND " + filename + " " + 
+                         std::to_string(ip) + " " + 
+                         std::to_string(port) + " " + 
+                         std::to_string(filesize) + "\001\r\n";
+    
+    // Forward the message to the recipient
+    if (send(recipient->get_fd(), dcc_msg.c_str(), dcc_msg.length(), 0) < 0) {
+        return "Error: Failed to send DCC request\n";
     }
-    return "NO REQUEST FOUND\n";
-};
+    
+    return "DCC request sent to " + to + " for file " + filename + "\n";
+}
 
 std::string Channel::showTopic(Client client)
 {

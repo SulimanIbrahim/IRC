@@ -191,60 +191,62 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
 }
 
 
-std::string DCCSend::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients){
+std::string DCCSend::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
     (void)Clients;
+    
     if (tokens.size() < 3) {
-        return "Not enough arguments\n";
+        return "Usage: SENDFILE <filename> <recipient>\n";
     }
-    std::string file = tokens[1];
-    std::string to = tokens[2];
+    
+    std::string filename = tokens[1];
+    std::string recipient = tokens[2];
+    
+    // Check if file exists
+    FILE *file = fopen(filename.c_str(), "rb");
+    if (!file) {
+        return "Error: File " + filename + " not found\n";
+    }
+    fclose(file);
+    
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
-            return it->sendDCCRequest(file, client, to);
+            return it->sendDCCRequest(filename, client, recipient);
         }
     }
-    return "DCCSend\n";
+    
+    return "Error: You are not in a channel\n";
 }
 
-std::string DCCAccept::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+std::string DCCAccept::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
-    if (tokens.size() < 3) {
-        return "Not enough arguments\n";
-    }
-    std::string client_to_accept = tokens[1];
-    std::string filename = tokens[2];
-    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-        if (it->getChannelName() == client.getChannel()) {
-            return it->acceptDCCRequest(client_to_accept, filename);
-        }
-    }
-    return "DCCAccept\n";
+    (void)Channels;
+    (void)client;
+    (void)tokens;
+    
+    // DCC Accept is now handled directly by the client
+    return "DCC file transfers are handled directly between clients. Your IRC client should automatically handle incoming transfers.\n";
 }
 
-std::string DCCReject::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients){
+std::string DCCReject::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
-    if (tokens.size() < 3) {
-        return "Not enough arguments\n";
-    }
-    std::string client_to_reject = tokens[1];
-    std::string filename = tokens[2];
-    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-        if (it->getChannelName() == client.getChannel()) {
-            return it->rejectDCCRequest(client_to_reject, filename);
-        }
-    }
-    return "DCCReject\n";
+    (void)Channels;
+    (void)client;
+    (void)tokens;
+    
+    // DCC Reject is now handled directly by the client
+    return "DCC file transfers are handled directly between clients. Use your IRC client's commands to reject transfers.\n";
+}
+
 std::string Ping::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
     (void)Channels;
-    if (tokens.size() < 1){
-        std::cerr << "PING command requires at least 1 argument\n";
-    }
-    else if (tokens.size() >= 2 && tokens[0] == "PING") {
-        std::string response = "PONG " + tokens[1] + "\r\n";
-        if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
-            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-        }
+    // if (tokens.size() > 1){
+    //     std::cerr << "PING command requires at least 1 argument\n";
+    // }
+    (void)tokens;
+    std::string response = "PONG \n";
+    if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
+        std::cerr << "Error sending message: " << strerror(errno) << std::endl;
     }
     return "";
 }
@@ -267,3 +269,27 @@ std::string Quit::execute(Client &client, std::vector<std::string> &tokens, std:
     (void)tokens;
     return "Goodbye\n";
 }
+
+// std::string Commands::Help() {
+//     std::string help = "\033[1;32m";
+//     help += "Available commands:\n";
+//     help += "JOIN <channel> [password] - Join a channel\n";
+//     help += "LEAVE - Leave the current channel\n";
+//     help += "PRIVMSG <recipient> <message> - Send a private message\n";
+//     help += "PUBMSG <message> - Send a message to the channel\n";
+//     help += "KICK <user> - Kick a user from the channel (operators only)\n";
+//     help += "INVITE <user> - Invite a user to the channel (operators only)\n";
+//     help += "TOPIC - View the channel topic\n";
+//     help += "LIST - List users in the channel\n";
+//     help += "MODE <mode> [args] - Set channel modes (operators only)\n";
+//     help += "  +i/-i - Set/unset invite-only mode\n";
+//     help += "  +t/-t - Set/unset topic restriction mode\n";
+//     help += "  +k/-k <password> - Set/unset channel password\n";
+//     help += "  +o/-o <user> - Give/take operator status\n";
+//     help += "SENDFILE <filename> <recipient> - Send a file via DCC\n";
+//     help += "ACCEPT <sender> <filename> - Accept a DCC file transfer\n";
+//     help += "REJECT <sender> <filename> - Reject a DCC file transfer\n";
+//     help += "AUTH - Show authentication commands\n";
+//     help += "\033[0m";
+//     return help;
+// }

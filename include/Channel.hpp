@@ -14,22 +14,12 @@
 #include <unistd.h>
 #include <cstring>
 #include <map>
-
-
-
-struct DCCRequest {
-    std::string filename;
-    std::string ip;
-    int port;
-    int filesize;
-    bool accepted;
-};
+#include <sstream>
 
 class Channel {
 private:
     const std::string _ChannelName;
     std::vector<Client> _Clients;
-    std::map<std::string, DCCRequest> _dcc_requests;
     std::vector<Client> _operators;
     std::string _Topic;
     std::string _Password;
@@ -50,10 +40,6 @@ public:
     void sendMessage(std::string message, Client &client);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);
     std::string sendDCCRequest(std::string filename, Client &client, std::string to);
-    std::string acceptDCCRequest(std::string client, std::string filename);
-    std::string setupDCC_Connection(std::string client, std::string filename);
-    std::string rejectDCCRequest(std::string client, std::string filename);
-    std::string getChannelName();
     std::string showTopic(Client client);
     void setTopic(std::string topic);
     std::string setInviteOnly_status(std::vector<std::string> tokens);

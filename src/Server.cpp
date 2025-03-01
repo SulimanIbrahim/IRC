@@ -92,7 +92,6 @@ std::string Server::ParseComands(std::string str, Client &client) {
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
         return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
     }
-
     if (cmd == "auth")
         return Commands::AuthMsg();
     if (cmd == "help")
@@ -194,7 +193,7 @@ void Server::acceptClients() {
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
     std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-    Client client(client_fd);
+    Client client(client_fd, ip);
     Clients.push_back(client);
     registerClientInQueue();
     // sendProgressBar(client_fd);
