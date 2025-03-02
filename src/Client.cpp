@@ -9,8 +9,8 @@ Client::Client(int _clientSockets, std::string ip):password_entered(false), _use
     _nickname = "";
     _realname = "";
     _hostname = "";
-    at_channel = "General";
 }
+
 Client::~Client()
 {
     std::cout << "Client destructor has been called" << std::endl;
@@ -24,6 +24,18 @@ Client::Client(const Client &client)
     _nickname = client._nickname;
     at_channel = client.at_channel;
     password_entered = client.password_entered;
+    _realname = client._realname;
+    _hostname = client._hostname;
+    _bot = client._bot; // Copy bot data
+}
+
+// Bot related methods for Client
+void Client::addActivity(const std::string& activity) {
+    _bot.addActivity(activity);
+}
+
+std::string Client::getBotResponse() {
+    return _bot.getResponse(_username);
 }
 
 bool Client::isAuthentificated()
@@ -36,16 +48,24 @@ bool Client::isAuthentificated()
 void Client::set_nick(std::string nickname)
 {
     _nickname = nickname;
-};
+    
+    if (!nickname.empty()) {
+        addActivity("Changed nickname to " + nickname);
+    }
+}
 void Client::set_username(std::string username)
 {
     _username = username;
-};
+    
+    if (!username.empty()) {
+        addActivity("Set username to " + username);
+    }
+}
 
 void Client::setChannel(std::string channel)
 {
     at_channel = channel;
-};
+}
 
 std::string Client::getChannel()
 {
@@ -76,7 +96,11 @@ bool Client::isPasswordEntered()
 void Client::setPasswordEntered(bool value)
 {
     password_entered = value;
-};
+    
+    if (value) {
+        addActivity("Password authenticated");
+    }
+}
 
 void Client::set_realname(std::string realname)
 {

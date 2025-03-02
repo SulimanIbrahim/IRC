@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 
 #include "Parser.hpp"
+#include "Bot.hpp"
 #include <fcntl.h>
 #include <iostream>
 #include <vector>
@@ -15,6 +16,9 @@
 #include <poll.h>
 #include <map>
 
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 class Client {
     private:
@@ -26,6 +30,7 @@ class Client {
         std::string _nickname;
         std::string _hostname;
         std::string at_channel;
+        Bot _bot;
 
     public:
         Client(int _clientSockets, std::string ip);
@@ -48,6 +53,10 @@ class Client {
         std::string get_realname();
         std::string get_hostname();
         bool isPasswordEntered();
+        
+        // Bot related methods
+        void addActivity(const std::string& activity);
+        std::string getBotResponse();
 };
 
 

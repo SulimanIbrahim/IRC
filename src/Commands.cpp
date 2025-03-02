@@ -54,7 +54,11 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
                 return "The channel is invite only\n";
             Leave().execute(client, tokens, Channels, Clients);
             client.setChannel(channel_name);
-            return it->JoinChannel(client, Clients);
+            client.addActivity("Joined channel " + tokens[1]);
+            std::string result = it->JoinChannel(client, Clients);
+            if (result.find("added") != std::string::npos)
+                client.addActivity("Created and joined channel " + channel_name);
+            return result;
         }
     }
     if (tokens.size() == 3) {
@@ -64,6 +68,7 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
     }
     Leave().execute(client, tokens, Channels, Clients); 
     client.setChannel(channel_name);
+    client.addActivity("Created and joined channel " + channel_name);
     return "Created and joined channel " + channel_name + "\n";
 }
 
@@ -79,7 +84,12 @@ std::string Invite::execute(Client &client, std::vector<std::string> &tokens, st
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == channel_name) {
             client.setChannel(channel_name);
-            return it->Invite(client, client_to_add, Clients);
+            std::string result = it->Invite(client, client_to_add, Clients);
+            
+            if (result.find("joined") != std::string::npos) {
+                client.addActivity("Invited " + client_to_add + " to channel " + channel_name);
+            }
+            return result;
         }
     }
     return "the channel " + channel_name + " does not exist\n";
@@ -94,7 +104,11 @@ std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std:
         return RED "bro, You can't kick someone from the General channel\n" RESET;
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
-            return it->kickClient(client, tokens[1]);
+            std::string result = it->kickClient(client, tokens[1]);  
+            if (result.find("kicked") != std::string::npos) {
+                client.addActivity("Kicked " + tokens[1] + " from channel " + client.getChannel());
+            }
+            return result;
         }
     }
     return "the channel " + client.getChannel() + " does not exist\n";

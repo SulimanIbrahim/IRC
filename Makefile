@@ -12,11 +12,13 @@ SRC= main.cpp \
 	 src/Auth.cpp\
 	 src/helpCommands/authMsg.cpp\
 	 src/helpCommands/help.cpp\
+	 src/Bot.cpp \
+	 src/BotCommand.cpp \
 	 
 
 OBJ= $(SRC:.cpp=.o)
 
-HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp ./include/Auth.hpp
+HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp ./include/Auth.hpp ./include/Bot.hpp
 
 ifeq ($(shell uname), Linux)
 	KQUEUE= -lkqueue
@@ -48,7 +50,6 @@ rmirssi1:
 
 rmirssi2:
 	docker rm -f irssi-receiver 2>/dev/null
-
 
 all: $(NAME)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) $(KQUEUE)

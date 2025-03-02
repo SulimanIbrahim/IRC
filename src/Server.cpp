@@ -28,6 +28,7 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
+    _commands["bot!"] = new BotCommand();
     std::cout << "Server initialized with port " << _port << " and password " << _password << std::endl;
 }
 
