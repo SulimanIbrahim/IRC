@@ -122,3 +122,11 @@ std::string Client::get_hostname()
 {
     return _hostname;
 };
+
+void Client::addToOutBuffer(const std::string& msg) {
+    _outBuffer += msg;
+}
+
+std::string& Client::getOutBuffer() {
+    return _outBuffer;
+}

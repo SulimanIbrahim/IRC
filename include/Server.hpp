@@ -77,6 +77,13 @@ private:
     struct sockaddr_in _server_addr;
     Parser _parser;
 
+    // Message queue for centralized message dispatching
+    struct PendingMessage {
+        int client_fd;
+        std::string message;
+    };
+    std::vector<PendingMessage> _pendingMessages;
+
 public:
     Server(int ac, char **av);
     ~Server();
@@ -98,6 +105,9 @@ public:
     // void stop();
     std::string ParseComands(std::string str, Client &client);
     void CheckComands(std::string str, Client &client);
+    void queueMessageForClient(int client_fd, const std::string& message);
+    void enableWriteEvent(int client_fd);
+    void handleClientWrite(Client &client);
 };
 
 #endif

@@ -1,11 +1,29 @@
 #include "../include/Commands.hpp"
 #include "../include/Server.hpp"
 
+Commands::Commands(Server* server) : _server(server) {}
 
 Commands::~Commands() {
 
 }
 
+Privmsg::Privmsg(Server* server) : Commands(server) {}
+Topic::Topic(Server* server) : Commands(server) {}
+Leave::Leave(Server* server) : Commands(server) {}
+Join::Join(Server* server) : Commands(server) {}
+Invite::Invite(Server* server) : Commands(server) {}
+Kick::Kick(Server* server) : Commands(server) {}
+DCCSend::DCCSend(Server* server) : Commands(server) {}
+DCCAccept::DCCAccept(Server* server) : Commands(server) {}
+Pubmsg::Pubmsg(Server* server) : Commands(server) {}
+List::List(Server* server) : Commands(server) {}
+DCCReject::DCCReject(Server* server) : Commands(server) {}
+Mode::Mode(Server* server) : Commands(server) {}
+Cap::Cap(Server* server) : Commands(server) {}
+Ping::Ping(Server* server) : Commands(server) {}
+Quit::Quit(Server* server) : Commands(server) {}
+Notice::Notice(Server* server) : Commands(server) {}
+BotCommand::BotCommand(Server* server) : Commands(server) {}
 
 std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
@@ -52,7 +70,7 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
             }
             else if (it->isInviteOnly())
                 return "The channel is invite only\n";
-            Leave().execute(client, tokens, Channels, Clients);
+            // Leave leave();
             client.setChannel(channel_name);
             client.addActivity("Joined channel " + tokens[1]);
             std::string result = it->JoinChannel(client, Clients);
@@ -62,11 +80,10 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
         }
     }
     if (tokens.size() == 3) {
-        Channels.push_back(Channel(client, channel_name, tokens[2]));
+        Channels.push_back(Channel(client, channel_name, tokens[2], _server));
     } else {
-        Channels.push_back(Channel(client, channel_name));
+        Channels.push_back(Channel(client, channel_name, _server));
     }
-    Leave().execute(client, tokens, Channels, Clients); 
     client.setChannel(channel_name);
     client.addActivity("Created and joined channel " + channel_name);
     return "Created and joined channel " + channel_name + "\n";

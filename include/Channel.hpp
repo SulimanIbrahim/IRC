@@ -1,6 +1,10 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+// Add this forward declaration at the top of the file
+class Server;
+
+#include "Server.hpp"
 #include "Parser.hpp"
 #include "Client.hpp"
 #include <fcntl.h>
@@ -16,6 +20,8 @@
 #include <map>
 #include <sstream>
 
+
+
 class Channel {
 private:
     const std::string _ChannelName;
@@ -26,10 +32,11 @@ private:
     bool InviteOnly;
     bool TopicRistercted;
     bool PasswordProtected;
+    Server* _server; // Add server pointer
 
 public:
-    Channel(Client client, std::string ChannelName);
-    Channel(Client client, std::string ChannelName, std::string password);
+    Channel(Client client, std::string ChannelName, Server* server);
+    Channel(Client client, std::string ChannelName, std::string password, Server* server);
     ~Channel();
 
     std::string listClients();

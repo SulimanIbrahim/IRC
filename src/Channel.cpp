@@ -1,6 +1,6 @@
 #include "../include/Channel.hpp"
 
-Channel::Channel(Client client, std::string ChannelName): _ChannelName(ChannelName)
+Channel::Channel(Client client, std::string ChannelName, Server* server): _ChannelName(ChannelName), _server(server)
 {
     _Clients.push_back(client);
     _operators.push_back(client);
@@ -11,7 +11,7 @@ Channel::Channel(Client client, std::string ChannelName): _ChannelName(ChannelNa
     PasswordProtected = false;
 };
 
-Channel::Channel(Client client, std::string ChannelName, std::string password): _ChannelName(ChannelName), _Password(password)
+Channel::Channel(Client client, std::string ChannelName, std::string password, Server* server): _ChannelName(ChannelName), _Password(password), _server(server)
 {
     _Clients.push_back(client);
     _operators.push_back(client);
@@ -92,7 +92,13 @@ void Channel::sendMessage(std::string message, Client &client)
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_username() != client.get_username())
-            send(it->get_fd(), message_to_send.c_str(), message_to_send.size(), 0);
+        {
+            it->addToOutBuffer(message_to_send);
+            
+            if (_server) {
+                _server->enableWriteEvent(it->get_fd());
+            }
+        }
     }
 };
 
@@ -104,7 +110,11 @@ std::string Channel::sendPrivateMessage(std::string message, Client &client, std
     {
         if (it->get_username() == to)
         {
-            send(it->get_fd(), message_to_send.c_str(), message_to_send.size(), 0);
+            it->addToOutBuffer(message_to_send);
+            
+            if (_server) {
+                _server->enableWriteEvent(it->get_fd());
+            }
             return "";
         }
     }
@@ -174,9 +184,9 @@ std::string Channel::sendDCCRequest(std::string filename, Client &client, std::s
                          std::to_string(filesize) + "\001\r\n";
     
     // Forward the message to the recipient
-    if (send(recipient->get_fd(), dcc_msg.c_str(), dcc_msg.length(), 0) < 0) {
-        return "Error: Failed to send DCC request\n";
-    }
+    // if (send(recipient->get_fd(), dcc_msg.c_str(), dcc_msg.length(), 0) < 0) {
+    //     return "Error: Failed to send DCC request\n";
+    // }
     
     return "DCC request sent to " + to + " for file " + filename + "\n";
 }

@@ -31,6 +31,7 @@ class Client {
         std::string _hostname;
         std::string at_channel;
         Bot _bot;
+        std::string _outBuffer;
 
     public:
         Client(int _clientSockets, std::string ip);
@@ -57,6 +58,9 @@ class Client {
         // Bot related methods
         void addActivity(const std::string& activity);
         std::string getBotResponse();
+
+        void addToOutBuffer(const std::string& msg);
+        std::string& getOutBuffer();
 };
 
 
