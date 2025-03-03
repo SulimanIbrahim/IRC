@@ -35,7 +35,6 @@ class Client {
 
     public:
         Client(int _clientSockets, std::string ip);
-        Client(int _clientSockets);
         Client(const Client &client);
         ~Client();
 

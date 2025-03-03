@@ -86,17 +86,22 @@ std::string Channel::listClients()
     return clients;
 };
 
-void Channel::sendMessage(std::string message, Client &client)
+void Channel::sendMessage(std::string message, Client &client, std::vector<Client> &serv_Clients)
 {
     std::string message_to_send = client.get_username() + ": " + message + "\n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_username() != client.get_username())
         {
-            it->addToOutBuffer(message_to_send);
-            
-            if (_server) {
-                _server->enableWriteEvent(it->get_fd());
+            for (std::vector<Client>::iterator op = serv_Clients.begin(); op != serv_Clients.end(); ++op)
+            {
+                if (op->get_username() == it->get_username())
+                {
+                    op->addToOutBuffer(message_to_send);
+                    if (_server) {
+                        _server->enableWriteEvent(it->get_fd());
+                    }
+                }
             }
         }
     }
@@ -230,12 +235,6 @@ std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
         InviteOnly = true;
         return "Invite only mode enabled\n";
     }
-    if (tokens[1][0] == '*')
-    {
-        std::string topic = Parser::join_message(tokens);
-        setTopic(topic);
-        return GREEN "Topic set to " + topic + "\n" RESET;
-    }
     if (tokens[1][0] == '-')
     {
         InviteOnly = false;
@@ -254,6 +253,12 @@ std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
     {
         TopicRistercted = true;
         return "Topic restriction mode enabled\n";
+    }
+    if (tokens[1][0] == '*')
+    {
+        std::string topic = Parser::join_message(tokens);
+        setTopic(topic);
+        return GREEN "Topic set to " + topic + "\n" RESET;
     }
     if (tokens[1][0] == '-')
     {

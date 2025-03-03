@@ -25,16 +25,32 @@ Quit::Quit(Server* server) : Commands(server) {}
 Notice::Notice(Server* server) : Commands(server) {}
 BotCommand::BotCommand(Server* server) : Commands(server) {}
 
-std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-    (void)Ignore_Clients;
+std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
+    // (void)Ignore_Clients;
+    // if (tokens.size() < 3) {
+    //     return "Not enough arguments\n";
+    // }
+    // std::string to = tokens[1];
+    // std::string message = Parser::join_message(tokens);
+    // for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+    //     if (it->getChannelName() == client.getChannel()) {
+    //         return it->sendPrivateMessage(message, client, to);
+    //     }
+    // }
+    // return "the channel " + client.getChannel() + " does not exist\n";
+
+    // (void)Ignore_Clients;
     if (tokens.size() < 3) {
-        return "Not enough arguments\n";
+        return BLUE "Privmsg <message>\n" RESET;
     }
-    std::string to = tokens[1];
+    if (client.getChannel() == "General") {
+        return "You can't send a public message in the General channel\n";
+    }
     std::string message = Parser::join_message(tokens);
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == client.getChannel()) {
-            return it->sendPrivateMessage(message, client, to);
+            it->sendMessage(message, client, Clients);
+            return "message sent\n";
         }
     }
     return "the channel " + client.getChannel() + " does not exist\n";
@@ -133,20 +149,23 @@ std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std:
 
 std::string Pubmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
-    if (tokens.size() != 2) {
+    (void)client;
+    (void)tokens;
+    (void)Channels;
+    // if (tokens.size() != 2) {
         return BLUE "Pubmsg <message>\n" RESET;
-    }
-    if (client.getChannel() == "General") {
-        return "You can't send a public message in the General channel\n";
-    }
-    std::string message = Parser::join_message(tokens);
-    for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-        if (it->getChannelName() == client.getChannel()) {
-            it->sendMessage(message, client);
-            return "message sent\n";
-        }
-    }
-    return "the channel " + client.getChannel() + " does not exist\n";
+    // }
+    // if (client.getChannel() == "General") {
+    //     return "You can't send a public message in the General channel\n";
+    // }
+    // std::string message = Parser::join_message(tokens);
+    // for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
+    //     if (it->getChannelName() == client.getChannel()) {
+    //         it->sendMessage(message, client);
+    //         return "message sent\n";
+    //     }
+    // }
+    // return "the channel " + client.getChannel() + " does not exist\n";
 }
 
 std::string List::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
@@ -274,12 +293,9 @@ std::string Ping::execute(Client &client, std::vector<std::string> &tokens, std:
     // if (tokens.size() > 1){
     //     std::cerr << "PING command requires at least 1 argument\n";
     // }
+    (void)client;
     (void)tokens;
-    std::string response = "PONG \n";
-    if (send(client.get_fd(), response.c_str(), response.size(), 0) < 0) {
-        std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-    }
-    return "";
+    return "PONG \n";
 }
 
 std::string Notice::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
