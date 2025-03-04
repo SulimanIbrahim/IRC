@@ -68,7 +68,7 @@ std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
             if (it->get_username() == client.get_username())
             {
                 _Clients.push_back(*it);
-                return client.get_username() + " added " + client.get_username() + " to channel " + _ChannelName + "\n";
+                return "Client " + client.get_username() + " joined channel " + _ChannelName + "\n";
             }
         }
         return "Client " + client.get_username() + " not found\n";
@@ -88,15 +88,16 @@ std::string Channel::listClients()
 
 void Channel::sendMessage(std::string message, Client &client, std::vector<Client> &serv_Clients)
 {
-    std::string message_to_send = client.get_username() + ": " + message + "\n";
+    std::string message_to_send = client.get_nick() + ": " + message + " \n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
-        if (it->get_username() != client.get_username())
+        if (it->get_nick() != client.get_nick())
         {
             for (std::vector<Client>::iterator op = serv_Clients.begin(); op != serv_Clients.end(); ++op)
             {
-                if (op->get_username() == it->get_username())
+                if (op->get_nick() == it->get_nick())
                 {
+                    std::cout << message_to_send << std::endl;
                     op->addToOutBuffer(message_to_send);
                     if (_server) {
                         _server->enableWriteEvent(it->get_fd());
@@ -196,6 +197,7 @@ std::string Channel::sendDCCRequest(std::string filename, Client &client, std::s
     return "DCC request sent to " + to + " for file " + filename + "\n";
 }
 
+
 std::string Channel::showTopic(Client client)
 {
     if (isTopicRisterction())
@@ -245,22 +247,16 @@ std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
 
 std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
 {
-    if (tokens.size() == 3)
-        setTopic(tokens[2]);
+    if (tokens.size() == 4)
+        setTopic(tokens[3]);
     else if (_Topic == "")
         return "Topic required\n";
-    if (tokens[1][0] == '+')
+    if (tokens[2][0] == '+')
     {
         TopicRistercted = true;
         return "Topic restriction mode enabled\n";
     }
-    if (tokens[1][0] == '*')
-    {
-        std::string topic = Parser::join_message(tokens);
-        setTopic(topic);
-        return GREEN "Topic set to " + topic + "\n" RESET;
-    }
-    if (tokens[1][0] == '-')
+    if (tokens[2][0] == '-')
     {
         TopicRistercted = false;
         return "Topic restriction mode disabled\n";
@@ -270,16 +266,16 @@ std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
 
 std::string Channel::setPrivate_status(std::vector<std::string> tokens)
 {
-    if (tokens.size() == 3)
-        setPassword(tokens[2]);
+    if (tokens.size() == 4)
+        setPassword(tokens[3]);
     if (getPassword() == "")
         return "Password required\n";
-    if (tokens[1][0] == '+')
+    if (tokens[2][0] == '+')
     {
         PasswordProtected = true;
         return "Password is required\n";
     }
-    if (tokens[1][0] == '-')
+    if (tokens[2][0] == '-')
     {
         PasswordProtected = false;
         return "Password is not required\n";
@@ -289,9 +285,9 @@ std::string Channel::setPrivate_status(std::vector<std::string> tokens)
 
 std::string Channel::setOperator_status(std::vector<std::string> tokens)
 {
-        if (tokens.size() < 3)
+        if (tokens.size() < 4)
             return "requires a username\n";
-        if (tokens[1][0] == '+')
+        if (tokens[2][0] == '+')
         {
             for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
             {
@@ -308,7 +304,7 @@ std::string Channel::setOperator_status(std::vector<std::string> tokens)
             }
             return "Client " + tokens[2] + " not found\n";
         }
-        if (tokens[1][0] == '-')
+        if (tokens[2][0] == '-')
         {
             for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
             {
@@ -328,17 +324,19 @@ void Channel::setPassword(std::string password)
     _Password = password;
 };
 
-void Channel::leaveChannel(Client client)
+std::string Channel::leaveChannel(Client &client)
 {
     std::vector<Client>::iterator it = _Clients.begin();
     for (; it != _Clients.end(); ++it)
     {
-        if (it->get_username() == client.get_username())
+        if (it->get_nick() == client.get_nick())
         {
+            it->removeChannel(_ChannelName);
             _Clients.erase(it);
-            break;
+            return "Client " + client.get_nick() + " left channel " + _ChannelName + "\n";
         }
     }
+    return "Client " + client.get_nick() + " not found in channel " + _ChannelName + "\n";
 };
 
 bool Channel::isInviteOnly()
@@ -400,4 +398,24 @@ std::string Channel::status()
     status += PasswordProtected ? "required" : "not required";
     status += RESET;
     return status;
+};
+
+bool Channel::isClientInChannel(Client &client)
+{
+    for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
+    {
+        if (it->get_nick() == client.get_nick())
+            return true;
+    }
+    return false;
+};
+
+bool Channel::isOperator(Client &client)
+{
+    for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+    {
+        if (it->get_nick() == client.get_nick())
+            return true;
+    }
+    return false;
 };

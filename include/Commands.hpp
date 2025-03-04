@@ -40,9 +40,9 @@ class Topic : public Commands {
 };
 
 
-class Leave : public Commands {
+class Part : public Commands {
     public:
-        Leave(Server* server);
+        Part(Server* server);
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients);
 };
 
@@ -74,17 +74,17 @@ class DCCAccept : public Commands {
         DCCAccept(Server* server);
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
-class Pubmsg : public Commands {
-    public:
-        Pubmsg(Server* server);
-        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-};
+// class Pubmsg : public Commands {
+//     public:
+//         Pubmsg(Server* server);
+//         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+// };
 
-class List : public Commands {
-    public:
-        List(Server* server);
-        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-};
+// class List : public Commands {
+//     public:
+//         List(Server* server);
+//         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
+// };
 
 class DCCReject : public Commands {
     public:
