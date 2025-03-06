@@ -41,6 +41,7 @@ public:
 
     std::string listClients();
     bool isClientInChannel(Client &client);
+    bool isClientInChannel(std::string &client);
     bool isOperator(Client &client);
     std::string getChannelName();
     std::string JoinChannel(Client client, std::vector<Client> &Clients);
@@ -49,7 +50,7 @@ public:
     void sendMessage(std::string message, Client &client, std::vector<Client> &Clients);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);
     std::string sendDCCRequest(std::string filename, Client &client, std::string to);
-    std::string showTopic(Client client);
+    std::string showTopic();
     void setTopic(std::string topic);
     std::string setInviteOnly_status(std::vector<std::string> tokens);
     std::string setTopicRisterction_status(std::vector<std::string> tokens);

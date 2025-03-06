@@ -102,7 +102,6 @@ public:
     void processMessage(Client &client, std::string message);
     void setNonBlocking(int fd);
     static void handlesignal(int sig);
-    // void stop();
     std::string ParseComands(std::string str, Client &client);
     void CheckComands(std::string str, Client &client);
     void queueMessageForClient(int client_fd, const std::string& message);
