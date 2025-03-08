@@ -26,7 +26,7 @@ Notice::Notice(Server* server) : Commands(server) {}
 BotCommand::BotCommand(Server* server) : Commands(server) {}
 
 std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
-    (void)Clients;
+    (void)client;
     if (tokens.size() < 3) {
         return BLUE "Privmsg <recipient> <message>\n" RESET;
     }
@@ -35,7 +35,7 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == channel) {
             if (client.is_inChannel(channel)) {
-                it->sendPrivateMessage(message, client, channel);
+                it->sendMessage(message, client, Clients);
                 return "\n";
             }
             return "You are not in the channel " + channel + "\n";
@@ -83,12 +83,11 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
             }
             else if (it->isInviteOnly())
                 return "The channel is invite only\n";
-            client.addActivity("Joined channel " + tokens[1]);
             std::string result = it->JoinChannel(client, Clients);
-            if (result.find("added") != std::string::npos)
+            if (result.find("joined") != std::string::npos)
             {
                 client.addChannel(channel_name);
-                client.addActivity("Created and joined channel " + channel_name);
+                client.addActivity("Joined channel " + tokens[1]);
             }
             return result;
         }

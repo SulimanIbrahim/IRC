@@ -66,9 +66,9 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
         return ":" + std::string(SERVER_NAME) + " 461 * USER :Not enough parameters\r\n";
     }
 
-    if (client.get_username() != "") {
-        return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
-    }
+    // if (client.get_username() != "") {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
 
     client.set_username(tokens[1]);
     client.set_hostname(tokens[3]);

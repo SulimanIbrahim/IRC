@@ -84,6 +84,7 @@ void Server::CheckComands(std::string str, Client &client) {
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
         response = ParseComands(*it, client);
         if (!response.empty()) {
+            std::cout << response << std::endl;
             client.addToOutBuffer(response);
             enableWriteEvent(client.get_fd());
         }

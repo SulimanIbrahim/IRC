@@ -54,7 +54,11 @@ std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
         if (it->get_nick() == client.get_nick())
         {
             _Clients.push_back(*it);
-            return "Client " + client.get_nick() + " joined channel " + _ChannelName + "\n";
+            std::string res = RPL_JOINMSG(it->get_hostname(), "127.0.0.1" ,getChannelName()); 
+            return 	 res + \
+			RPL_TOPICIS(it->get_nick(),getChannelName(),showTopic()) + \
+			RPL_NAMREPLY(it->get_nick(),getChannelName(), "") + \
+			RPL_ENDOFNAMES(it->get_nick(),getChannelName());
         }
     }
     return "Client " + client.get_nick() + " not found\n";
@@ -79,7 +83,7 @@ void Channel::sendMessage(std::string message, Client &client, std::vector<Clien
             {
                 if (op->get_nick() == it->get_nick())
                 {
-                    // std::cout << message_to_send << std::endl;
+                    std::cout << message_to_send << std::endl;
                     op->addToOutBuffer(message_to_send);
                     if (_server) {
                         _server->enableWriteEvent(it->get_fd());

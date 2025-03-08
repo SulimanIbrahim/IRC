@@ -7,6 +7,7 @@ class Channel;
 class Client;
 class Commands; // Add forward declaration for Commands itself
 
+
 #include <iostream>
 #include <cstdlib>
 #include <string>
