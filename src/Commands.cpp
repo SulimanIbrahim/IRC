@@ -84,7 +84,7 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
             else if (it->isInviteOnly())
                 return "The channel is invite only\n";
             std::string result = it->JoinChannel(client, Clients);
-            if (result.find("joined") != std::string::npos)
+            if (result.find("JOIN") != std::string::npos)
             {
                 client.addChannel(channel_name);
                 client.addActivity("Joined channel " + tokens[1]);
