@@ -38,7 +38,7 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
 std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
     (void)password;
     if (tokens.size() < 2) {
-        return ":" + std::string(SERVER_NAME) + " 431 * :No nickname given\r\n";
+        return ": 431 * :No nickname given\r\n";
     }
 
     // Check if nickname is already in use

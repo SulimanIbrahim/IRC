@@ -74,14 +74,14 @@ std::string Channel::listClients()
 
 void Channel::sendMessage(std::string message, Client &client, std::vector<Client> &serv_Clients)
 {
-    std::string message_to_send =  ":" +client.get_nick() +  "!~" + client.get_nick() + "@localhost PRIVMSG "  + _ChannelName + " :" + message + "\n";
+    std::string message_to_send =  ":" +client.get_nick() +  "!~" + client.get_username() + "@localhost PRIVMSG "  + _ChannelName + " :" + message + "\n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
-        if (it->get_nick() != client.get_nick())
+        if (it->get_fd() != client.get_fd())
         {
             for (std::vector<Client>::iterator op = serv_Clients.begin(); op != serv_Clients.end(); ++op)
             {
-                if (op->get_nick() == it->get_nick())
+                if (op->get_fd() == it->get_fd())
                 {
                     std::cout << message_to_send << std::endl;
                     op->addToOutBuffer(message_to_send);
