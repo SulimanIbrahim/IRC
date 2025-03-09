@@ -79,7 +79,7 @@ std::string IRCClient::receiveMessage() {
 
 int main() {
     std::string serverAddress = "127.0.0.1";
-    int port = 4444;
+    int port = 6667;
 
    IRCClient *clients = new IRCClient[1010];
     for (int i = 0; i < 1010; i++)
