@@ -184,9 +184,9 @@ std::string Channel::sendDCCRequest(std::string filename, Client &client, std::s
     // Create the DCC SEND message
     std::string dcc_msg = ":" + client.get_username() + " PRIVMSG " + to + 
                          " :\001DCC SEND " + filename + " " + 
-                         std::to_string(ip) + " " + 
-                         std::to_string(port) + " " + 
-                         std::to_string(filesize) + "\001\r\n";
+                         numberToString(ip) + " " + 
+                         numberToString(port) + " " + 
+                         numberToString(filesize) + "\001\r\n";
     
     // Forward the message to the recipient
     // if (send(recipient->get_fd(), dcc_msg.c_str(), dcc_msg.length(), 0) < 0) {
