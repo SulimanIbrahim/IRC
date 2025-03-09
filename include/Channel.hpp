@@ -22,7 +22,6 @@ class Server;
 #include <sstream>
 
 
-
 class Channel {
 private:
     // Utility functions for string conversion (C++98 compatible replacement for std::to_string)
@@ -53,6 +52,9 @@ public:
     ~Channel();
 
     std::string listClients();
+    bool isClientInChannel(Client &client);
+    bool isClientInChannel(std::string &client);
+    bool isOperator(Client &client);
     std::string getChannelName();
     std::string JoinChannel(Client client, std::vector<Client> &Clients);
     std::string Invite(Client client, std::string clien_to_add, std::vector<Client> &Clients);
@@ -60,14 +62,14 @@ public:
     void sendMessage(std::string message, Client &client, std::vector<Client> &Clients);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);
     std::string sendDCCRequest(std::string filename, Client &client, std::string to);
-    std::string showTopic(Client client);
+    std::string showTopic();
     void setTopic(std::string topic);
     std::string setInviteOnly_status(std::vector<std::string> tokens);
     std::string setTopicRisterction_status(std::vector<std::string> tokens);
     std::string setPrivate_status(std::vector<std::string> tokens);
     std::string setOperator_status(std::vector<std::string> tokens);
     void setPassword(std::string password);
-    void leaveChannel(Client client);
+    std::string leaveChannel(Client &client);
     std::string getPassword();
     bool isPrivate();
     bool isInviteOnly();

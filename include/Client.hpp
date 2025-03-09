@@ -29,7 +29,7 @@ class Client {
         std::string _realname;
         std::string _nickname;
         std::string _hostname;
-        std::string at_channel;
+        std::vector<std::string> channels;
         Bot _bot;
         std::string _outBuffer;
 
@@ -43,15 +43,16 @@ class Client {
         void set_realname(std::string realname);
         void set_hostname(std::string hostname);
         void setPasswordEntered(bool value);
-        void setChannel(std::string channel);
+        void addChannel(std::string channel);
+        void removeChannel(std::string channel);
         bool isAuthentificated();
-        std::string getChannel();
         int get_fd();
         std::string get_ip();
         std::string get_nick();
         std::string get_username();
         std::string get_realname();
         std::string get_hostname();
+        bool is_inChannel(std::string channel);
         bool isPasswordEntered();
         
         // Bot related methods

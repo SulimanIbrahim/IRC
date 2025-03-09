@@ -30,6 +30,34 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 
+#define RPL_CONNECTED(nickname) (": 001 " + nickname + " : Welcome to the IRC server!" + "\r\n")
+#define RPL_UMODEIS(hostname, channelname, mode, user)  ":" + hostname + " MODE " + channelname + " " + mode + " " + user + "\r\n"
+#define RPL_CREATIONTIME(nickname, channelname, creationtime) ": 329 " + nickname + " #" + channelname + " " + creationtime + "\r\n"
+#define RPL_CHANNELMODES(nickname, channelname, modes) ": 324 " + nickname + " #" + channelname + " " + modes + "\r\n"
+#define RPL_CHANGEMODE(hostname, channelname, mode, arguments) (":" + hostname + " MODE #" + channelname + " " + mode + " " + arguments + "\r\n")
+#define RPL_NICKCHANGE(oldnickname, nickname) (":" + oldnickname + " NICK " + nickname + "\r\n")
+#define RPL_JOINMSG(hostname, ipaddress, channelname) (":" + hostname + "@" + ipaddress + " JOIN #" + channelname + "\r\n")
+#define RPL_NAMREPLY(nickname, channelname, clientslist) (": 353 " + nickname + " @ #" + channelname + " :" + clientslist + "\r\n")
+#define RPL_ENDOFNAMES(nickname, channelname) (": 366 " + nickname + " #" + channelname + " :END of /NAMES list" + "\r\n")
+#define RPL_TOPICIS(nickname, channelname, topic) (": 332 " + nickname + " #" +channelname + " :" + topic + "\r\n")
+
+///////// ERRORS ////////////////
+#define ERR_NEEDMODEPARM(channelname, mode) (": 696 #" + channelname + " * You must specify a parameter for the key mode. " + mode + "\r\n")
+#define ERR_INVALIDMODEPARM(channelname, mode) ": 696 #" + channelname + " Invalid mode parameter. " + mode + "\r\n"
+#define ERR_KEYSET(channelname) ": 467 #" + channelname + " Channel key already set. " + "\r\n"
+#define ERR_UNKNOWNMODE(nickname, channelname, mode) ": 472 " + nickname + " #" + channelname + " " + mode + " :is not a recognised channel mode" + "\r\n"
+#define ERR_NOTENOUGHPARAM(nickname) (": 461 " + nickname + " :Not enough parameters." + "\r\n")
+#define ERR_CHANNELNOTFOUND(nickname, channelname) (": 403 " + nickname + " " + channelname + " :No such channel" + "\r\n")
+#define ERR_NOTOPERATOR(channelname) (": 482 #" + channelname + " :You're not a channel operator" + "\r\n")
+#define ERR_NOSUCHNICK(channelname, name) (": 401 #" + channelname + " " + name + " :No such nick/channel" + "\r\n" )
+#define ERR_INCORPASS(nickname) (": 464 " + nickname + " :Password incorrect !" + "\r\n" )
+#define ERR_ALREADYREGISTERED(nickname) (": 462 " + nickname + " :You may not reregister !" + "\r\n" )
+#define ERR_NICKINUSE(nickname) (": 433 " + nickname + " :Nickname is already in use" + "\r\n")
+#define ERR_ERRONEUSNICK(nickname) (": 432 " + nickname + " :Erroneus nickname" + "\r\n")
+#define ERR_NOTREGISTERED(nickname) (": 451 " + nickname + " :You have not registered!" + "\r\n")
+#define ERR_CMDNOTFOUND(nickname, command) (": 421 " + nickname + " " + command + " :Unknown command" + "\r\n")
+
+
 #include "Client.hpp"
 #include "Commands.hpp"
 #include "Auth.hpp"
@@ -102,7 +130,6 @@ public:
     void processMessage(Client &client, std::string message);
     void setNonBlocking(int fd);
     static void handlesignal(int sig);
-    // void stop();
     std::string ParseComands(std::string str, Client &client);
     void CheckComands(std::string str, Client &client);
     void queueMessageForClient(int client_fd, const std::string& message);

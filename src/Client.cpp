@@ -1,6 +1,6 @@
 #include "../include/Client.hpp"
 
-Client::Client(int _clientSockets, std::string ip):password_entered(false), _username(""), _nickname(""), at_channel("") {
+Client::Client(int _clientSockets, std::string ip):password_entered(false), _username(""), _nickname("") {
     std::cout << "Client constructor" << std::endl;
     std::cout << "Client socket: " << _clientSockets << std::endl;
     _fd = _clientSockets;
@@ -22,7 +22,10 @@ Client::Client(const Client &client)
     _fd = client._fd;
     _username = client._username;
     _nickname = client._nickname;
-    at_channel = client.at_channel;
+    for (std::vector<std::string>::const_iterator it = client.channels.begin(); it != client.channels.end(); ++it)
+    {
+        channels.push_back(*it);
+    }
     password_entered = client.password_entered;
     _realname = client._realname;
     _hostname = client._hostname;
@@ -62,15 +65,23 @@ void Client::set_username(std::string username)
     }
 }
 
-void Client::setChannel(std::string channel)
+void Client::addChannel(std::string channel)
 {
-    at_channel = channel;
+    if (!is_inChannel(channel))
+    {
+        channels.push_back(channel);
+    }
 }
 
-std::string Client::getChannel()
+void Client::removeChannel(std::string channel)
 {
-    return at_channel;
-};
+    if (is_inChannel(channel))
+    {
+        channels.erase(std::remove(channels.begin(), channels.end(), channel), channels.end());
+    }
+}
+
+
 
 int Client::get_fd()
 {
@@ -129,4 +140,14 @@ void Client::addToOutBuffer(const std::string& msg) {
 
 std::string& Client::getOutBuffer() {
     return _outBuffer;
+}
+
+bool Client::is_inChannel(std::string channel)
+{
+    for (std::vector<std::string>::iterator it = channels.begin(); it != channels.end(); ++it)
+    {
+        if (*it == channel)
+            return true;
+    }
+    return false;
 }
