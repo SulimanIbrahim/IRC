@@ -73,7 +73,7 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
-#include <sys/event.h>
+#include <algorithm>
 #include <signal.h>
 #if defined(__APPLE__) && defined(__MACH__)
     #include <sys/event.h>
