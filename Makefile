@@ -13,7 +13,6 @@ SRC= main.cpp \
 	 src/helpCommands/authMsg.cpp\
 	 src/helpCommands/help.cpp\
 	 src/Bot.cpp \
-	 src/BotCommand.cpp \
 	 
 
 OBJ= $(SRC:.cpp=.o)

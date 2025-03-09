@@ -1,6 +1,5 @@
 #include "../include/Server.hpp"
 
-
 bool g_running = false;
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
@@ -16,8 +15,6 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["sendfile"] = new DCCSend(this);
     _commands["accept"] = new DCCAccept(this);
     _commands["reject"] = new DCCReject(this);
-    // _commands["pubmsg"] = new Pubmsg(this);
-    // _commands["list"] = new List(this);
     _commands["mode"] = new Mode(this);
     _commands["invite"] = new Invite(this);
     _commands["part"] = new Part(this);
@@ -25,7 +22,6 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["cap"] = new Cap(this);
     _commands["notice"] = new Notice(this);
     _commands["ping"] = new Ping(this);
-    _commands["bot!"] = new BotCommand(this);
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();

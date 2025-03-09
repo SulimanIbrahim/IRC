@@ -23,7 +23,6 @@ Cap::Cap(Server* server) : Commands(server) {}
 Ping::Ping(Server* server) : Commands(server) {}
 Quit::Quit(Server* server) : Commands(server) {}
 Notice::Notice(Server* server) : Commands(server) {}
-BotCommand::BotCommand(Server* server) : Commands(server) {}
 
 static std::string handleDCCMessage(const std::string& message, Client& client, 
                                   const std::string& recipient, std::vector<Client>& Clients, Server* server) {
@@ -89,6 +88,8 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == recipient) {
             if (client.is_inChannel(recipient)) {
+                if (tokens[2] == "BOT")
+                    return client.getBotResponse(recipient);
                 it->sendMessage(message, client, Clients);
                 return "\n";
             }
