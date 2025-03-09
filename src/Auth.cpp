@@ -38,7 +38,7 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
 std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
     (void)password;
     if (tokens.size() < 2) {
-        return ":" + std::string(SERVER_NAME) + " 431 * :No nickname given\r\n";
+        return ": 431 * :No nickname given\r\n";
     }
 
     // Check if nickname is already in use
@@ -66,9 +66,9 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
         return ":" + std::string(SERVER_NAME) + " 461 * USER :Not enough parameters\r\n";
     }
 
-    if (client.get_username() != "") {
-        return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
-    }
+    // if (client.get_username() != "") {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
 
     client.set_username(tokens[1]);
     client.set_hostname(tokens[3]);

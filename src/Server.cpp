@@ -10,22 +10,25 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _serverSocket = -1;
     kq_fd = -1;
     online_clients = 0;
-    _commands["privmsg"] = new Privmsg();
-    _commands["join"] = new Join();
-    _commands["kick"] = new Kick();
-    _commands["pubmsg"] = new Pubmsg();
-    _commands["list"] = new List();
-    _commands["mode"] = new Mode();
-    _commands["invite"] = new Invite();
-    _commands["leave"] = new Leave();
-    _commands["topic"] = new Topic();
-    _commands["cap"] = new Cap();
-    _commands["notice"] = new Notice();
-    _commands["ping"] = new Ping();
+    _commands["privmsg"] = new Privmsg(this);
+    _commands["join"] = new Join(this);
+    _commands["kick"] = new Kick(this);
+    _commands["sendfile"] = new DCCSend(this);
+    _commands["accept"] = new DCCAccept(this);
+    _commands["reject"] = new DCCReject(this);
+    // _commands["pubmsg"] = new Pubmsg(this);
+    // _commands["list"] = new List(this);
+    _commands["mode"] = new Mode(this);
+    _commands["invite"] = new Invite(this);
+    _commands["part"] = new Part(this);
+    _commands["topic"] = new Topic(this);
+    _commands["cap"] = new Cap(this);
+    _commands["notice"] = new Notice(this);
+    _commands["ping"] = new Ping(this);
+    _commands["bot!"] = new BotCommand(this);
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
-    _commands["bot!"] = new BotCommand();
     std::cout << "Server initialized with port " << _port << " and password " << _password << std::endl;
 }
 
@@ -46,34 +49,6 @@ Server::~Server() {
     std::cout << MAGENTA << "Server is shutting down..." << RESET << std::endl;
 }
 
-// static int sendTypingEffect(int client_fd, std::string message, int delay) {
-//     int bytes_sent;
-//     for (size_t i = 0; i < message.size(); i++) {
-//         bytes_sent = send(client_fd, &message[i], 1, 0);
-//         usleep(delay * 1000); // Small delay for effect
-//     }
-//     return bytes_sent;
-// }
-
-// static void sendProgressBar(int client_fd) {
-//     std::string bar = "\033[1;34mLoading: [";
-//     send(client_fd, bar.c_str(), bar.size(), 0);
-//     for (int i = 0; i < 20; i++) {
-//         send(client_fd, "=", 1, 0);
-//         usleep(200000); // 0.3 seconds delay
-//     }
-//     send(client_fd, "] Done!\n\033[0m", 11, 0);
-// }
-
-// static void sendAnimatedText(int client_fd, std::string message) {
-//     for (size_t i = 0; i < message.size(); i++) {
-//         std::string temp = "\r" + message.substr(0, i+1);
-//         send(client_fd, temp.c_str(), temp.size(), 0);
-//         usleep(10000); // 0.1 sec delay
-//     }
-//     send(client_fd, "\n\033[1;32mServer: \033[0m", 20, 0);
-// }
-
 std::string Server::ParseComands(std::string str, Client &client) {
     if (str.empty())
         return "";
@@ -83,6 +58,10 @@ std::string Server::ParseComands(std::string str, Client &client) {
         *it = tolower(*it);
     std::cout << "Command: " << cmd << std::endl;
     // Allow CAP negotiation before authentication
+    if (cmd == "auth")
+        return Commands::AuthMsg();
+    if (cmd == "help")
+        return Commands::Help();
     if (cmd == "cap")
         return _commands["cap"]->execute(client, tokens, Channels, Clients);
     if (cmd == "join" && tokens[1] == ":")
@@ -90,11 +69,6 @@ std::string Server::ParseComands(std::string str, Client &client) {
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
         return _auth_commands[cmd]->runAuthCommands(client, tokens, _password, Clients);
     }
-
-    if (cmd == "auth")
-        return Commands::AuthMsg();
-    if (cmd == "help")
-        return Commands::Help();
     if (!client.isAuthentificated())
         return "\033[1;31m✗ Error: You must authenticate first\n\033[0m";
     if (_commands.find(cmd) != _commands.end()) {
@@ -107,21 +81,14 @@ void Server::CheckComands(std::string str, Client &client) {
     std::string response;
     std::vector<std::string> tokens;
     tokens = _parser.split(str, '\n');
-    // str = _parser.take_first_line(str);
     for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
-        // std::cout << "(" << *it << ")" << std::endl;
         response = ParseComands(*it, client);
-        ssize_t bytes_sent = send(client.get_fd(), response.c_str(), response.size(), 0);
-        if (bytes_sent < 0) {
-            if (errno == EPIPE) {
-                std::cerr << "Broken pipe, client disconnected" << std::endl;
-                handleDisconnections(client.get_fd());
-            } else {
-                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-            }
+        if (!response.empty()) {
+            std::cout << response << std::endl;
+            client.addToOutBuffer(response);
+            enableWriteEvent(client.get_fd());
         }
     }
-    return;
 }
 
 void Server::setupSocket() {
@@ -160,9 +127,15 @@ void Server::setNonBlocking(int fd) {
 
 void Server::registerClientInQueue() {
     int client_fd = Clients.back().get_fd();
-    struct kevent event;
-    EV_SET(&event, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0) {
+    struct kevent events[2];
+    
+    // Register for read events
+    EV_SET(&events[0], client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+    
+    // Register for write events - initially disabled 
+    EV_SET(&events[1], client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+    
+    if (kevent(kq_fd, events, 2, NULL, 0, NULL) < 0) {
         std::cerr << "Failed to register client FD: " << strerror(errno) << std::endl;
     }
 }
@@ -181,8 +154,7 @@ void Server::acceptClients() {
         return;
     }
     online_clients++;
-    if (online_clients >= 1000) {
-        send(client_fd, "\033[1;31m✗ Error: Server is Busy, please try again later\n\033[0m", 50, 0);
+    if (online_clients >= 5000) {
         close(client_fd);
         online_clients--;
         return;
@@ -192,7 +164,7 @@ void Server::acceptClients() {
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
     std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-    Client client(client_fd);
+    Client client(client_fd, ip);
     Clients.push_back(client);
     registerClientInQueue();
     // sendProgressBar(client_fd);
@@ -236,16 +208,26 @@ void Server::handleEvents() {
             acceptClients();
         }
         else {
-            if (events[i].flags & EVFILT_READ) {
+            int client_fd = events[i].ident;
+            if (events[i].flags & EV_EOF) {
+                handleDisconnections(client_fd);
+                continue;
+            }
+            if (events[i].filter == EVFILT_READ) {
                 for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-                    if ((unsigned int)it->get_fd() == events[i].ident) {
+                    if (it->get_fd() == client_fd) {
                         handleClientMessage(*it);
                         break;
                     }
                 }
             }
-            if (events[i].flags & EV_EOF) {
-                handleDisconnections(events[i].ident);
+            if (events[i].filter == EVFILT_WRITE) {
+                for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+                    if (it->get_fd() == client_fd) {
+                        handleClientWrite(*it);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -290,6 +272,52 @@ void Server::handlesignal(int sig) {
     }
 }
 
+
+void Server::enableWriteEvent(int client_fd) {
+    struct kevent event;
+    EV_SET(&event, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+    if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0) {
+        std::cerr << "Failed to enable write event: " << strerror(errno) << std::endl;
+    }
+}
+
+void Server::handleClientWrite(Client &client) {
+    std::string &buffer = client.getOutBuffer();
+    struct kevent event;
+    if (buffer.empty())
+    {
+         EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+            if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
+                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+        return ;
+    }
+        
+    ssize_t bytes_sent = send(client.get_fd(), buffer.c_str(), buffer.size(), 0);
+    if (bytes_sent < 0) {
+        EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+            if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
+                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+        if (errno == EPIPE) {
+            std::cerr << "Broken pipe, client disconnected" << std::endl;
+            handleDisconnections(client.get_fd());
+        } else if (errno != EWOULDBLOCK && errno != EAGAIN) {
+            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+        }
+    } else if (bytes_sent > 0) {
+        // Remove sent data from buffer
+        std::cout << "Sent " << bytes_sent << " bytes to client" << std::endl;
+        std::cout << "Buffer size before: " << buffer.size() << std::endl;
+        buffer.erase(0, bytes_sent);
+        std::cout << "Buffer size: " << buffer.size() << std::endl;
+        // If buffer is now empty, disable write events until needed again
+        if (buffer.empty()) {
+            EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+            if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
+                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+        }
+    }
+}
+
 void Server::start() {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, Server::handlesignal);
@@ -303,4 +331,19 @@ void Server::start() {
     while (g_running) {
         handleEvents();
     }
+}
+
+void Server::queueMessageForClient(int client_fd, const std::string& message) {
+    // Find the client with this fd
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        if (it->get_fd() == client_fd) {
+            // Add to the client's output buffer
+            it->addToOutBuffer(message);
+            // Enable write events for this client
+            enableWriteEvent(client_fd);
+            return;
+        }
+    }
+    // If we get here, the client wasn't found (might have disconnected)
+    std::cerr << "Warning: Tried to queue message for non-existent client (fd: " << client_fd << ")" << std::endl;
 }

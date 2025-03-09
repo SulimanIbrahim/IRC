@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <cstring>
 #include <poll.h>
+#include <map>
+
 #include <ctime>
 #include <sstream>
 #include <iomanip>
@@ -22,15 +24,17 @@ class Client {
     private:
         bool password_entered;
         int _fd;
+        std::string _ip;
         std::string _username;
         std::string _realname;
         std::string _nickname;
         std::string _hostname;
-        std::string at_channel;
+        std::vector<std::string> channels;
         Bot _bot;
+        std::string _outBuffer;
 
     public:
-        Client(int _clientSockets);
+        Client(int _clientSockets, std::string ip);
         Client(const Client &client);
         ~Client();
 
@@ -39,19 +43,25 @@ class Client {
         void set_realname(std::string realname);
         void set_hostname(std::string hostname);
         void setPasswordEntered(bool value);
-        void setChannel(std::string channel);
+        void addChannel(std::string channel);
+        void removeChannel(std::string channel);
         bool isAuthentificated();
-        std::string getChannel();
         int get_fd();
+        std::string get_ip();
         std::string get_nick();
         std::string get_username();
         std::string get_realname();
         std::string get_hostname();
+        bool is_inChannel(std::string channel);
         bool isPasswordEntered();
         
         // Bot related methods
         void addActivity(const std::string& activity);
         std::string getBotResponse();
+
+        void addToOutBuffer(const std::string& msg);
+        std::string& getOutBuffer();
 };
+
 
 #endif

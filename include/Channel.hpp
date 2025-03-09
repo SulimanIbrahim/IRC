@@ -1,6 +1,10 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+// Add this forward declaration at the top of the file
+class Server;
+
+#include "Server.hpp"
 #include "Parser.hpp"
 #include "Client.hpp"
 #include <fcntl.h>
@@ -13,6 +17,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
+#include <map>
+#include <sstream>
+
 
 class Channel {
 private:
@@ -24,27 +31,32 @@ private:
     bool InviteOnly;
     bool TopicRistercted;
     bool PasswordProtected;
+    Server* _server; // Add server pointer
 
 public:
-    Channel(Client client, std::string ChannelName);
-    Channel(Client client, std::string ChannelName, std::string password);
+    Channel(Client client, std::string ChannelName, Server* server);
+    Channel(Client client, std::string ChannelName, std::string password, Server* server);
     ~Channel();
 
     std::string listClients();
+    bool isClientInChannel(Client &client);
+    bool isClientInChannel(std::string &client);
+    bool isOperator(Client &client);
     std::string getChannelName();
     std::string JoinChannel(Client client, std::vector<Client> &Clients);
     std::string Invite(Client client, std::string clien_to_add, std::vector<Client> &Clients);
     std::string kickClient(Client client, std::string clien_to_kick);
-    void sendMessage(std::string message, Client &client);
+    void sendMessage(std::string message, Client &client, std::vector<Client> &Clients);
     std::string sendPrivateMessage(std::string message, Client &client, std::string to);
-    std::string showTopic(Client client);
+    std::string sendDCCRequest(std::string filename, Client &client, std::string to);
+    std::string showTopic();
     void setTopic(std::string topic);
     std::string setInviteOnly_status(std::vector<std::string> tokens);
     std::string setTopicRisterction_status(std::vector<std::string> tokens);
     std::string setPrivate_status(std::vector<std::string> tokens);
     std::string setOperator_status(std::vector<std::string> tokens);
     void setPassword(std::string password);
-    void leaveChannel(Client client);
+    std::string leaveChannel(Client &client);
     std::string getPassword();
     bool isPrivate();
     bool isInviteOnly();
