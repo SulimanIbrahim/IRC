@@ -29,7 +29,7 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
         return "332 * :You may now register\r\n";
     }
 
-    return ":" + std::string(SERVER_NAME) + " 464 * :Password incorrect\r\n";
+    return ":" + std::string(SERVER_NAME) + " 464 * : Password incorrect\r\n";
 }
 
 std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
