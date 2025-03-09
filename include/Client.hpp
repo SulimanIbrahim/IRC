@@ -13,7 +13,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
-#include <poll.h>
 #include <map>
 
 #include <ctime>
@@ -23,6 +22,7 @@
 class Client {
     private:
         bool password_entered;
+        bool registered;
         int _fd;
         std::string _ip;
         std::string _username;
@@ -54,10 +54,12 @@ class Client {
         std::string get_hostname();
         bool is_inChannel(std::string channel);
         bool isPasswordEntered();
+        bool isRegistered();
+        void setRegistered(bool value);
         
         // Bot related methods
         void addActivity(const std::string& activity);
-        std::string getBotResponse();
+        std::string getBotResponse(std::string channel);
 
         void addToOutBuffer(const std::string& msg);
         std::string& getOutBuffer();
