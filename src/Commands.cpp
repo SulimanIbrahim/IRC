@@ -25,23 +25,77 @@ Quit::Quit(Server* server) : Commands(server) {}
 Notice::Notice(Server* server) : Commands(server) {}
 BotCommand::BotCommand(Server* server) : Commands(server) {}
 
+static std::string handleDCCMessage(const std::string& message, Client& client, 
+                                  const std::string& recipient, std::vector<Client>& Clients, Server* server) {
+    size_t dcc_pos = message.find("DCC SEND");
+    if (dcc_pos == std::string::npos) {
+        return "Invalid DCC message format\n";
+    }
+    std::istringstream iss(message.substr(dcc_pos));
+    std::string dummy1, dummy2, filename, ip_str, port_str, size_str;
+    iss >> dummy1 >> dummy2 >> filename >> ip_str >> port_str >> size_str;
+
+    std::string dcc_message = std::string("\001") + "DCC SEND " + filename + " " + 
+                             ip_str + " " + 
+                             port_str + " " +
+                             size_str + std::string("\001");
+
+    std::string ctcp_message = ":" + client.get_nick() + "!~" + client.get_username() + 
+                             "@" + client.get_ip() + " PRIVMSG " + recipient + 
+                             " :" + dcc_message + "\r\n";
+    
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        if (it->get_nick() == recipient) {
+            it->addToOutBuffer(ctcp_message);
+            if (server) {
+                server->enableWriteEvent(it->get_fd());
+            }
+            return "DCC request sent to " + recipient + "\n";
+        }
+    }
+    return "User " + recipient + " not found\n";
+}
+
 std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
-    (void)client;
     if (tokens.size() < 3) {
         return BLUE "Privmsg <recipient> <message>\n" RESET;
     }
-    std::string channel = tokens[1];
+    
+    std::string recipient = tokens[1];
     std::string message = Parser::join_message(tokens);
+    
+    if (message.find("DCC SEND") > 0 || message.find("\001DCC SEND") > 0) {
+        return handleDCCMessage(message, client, recipient, Clients, _server);
+    }
+    
+    // Handle regular private messages to users
+    if (recipient[0] != '#') {
+        for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+            if (it->get_nick() == recipient) {
+                std::string message_to_send = ":" + client.get_nick() + "!~" + client.get_username() + 
+                                             "@" + client.get_ip() + " PRIVMSG " + recipient + 
+                                             " :" + message + "\r\n";
+                it->addToOutBuffer(message_to_send);
+                if (_server) {
+                    _server->enableWriteEvent(it->get_fd());
+                }
+                return "Message sent to " + recipient + "\n";
+            }
+        }
+        return "User " + recipient + " not found\n";
+    }
+
+    // Handle channel messages
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-        if (it->getChannelName() == channel) {
-            if (client.is_inChannel(channel)) {
+        if (it->getChannelName() == recipient) {
+            if (client.is_inChannel(recipient)) {
                 it->sendMessage(message, client, Clients);
                 return "\n";
             }
-            return "You are not in the channel " + channel + "\n";
+            return "You are not in the channel " + recipient + "\n";
         }
     }
-    return "the channel " + channel + " does not exist\n";
+    return "The channel " + recipient + " does not exist\n";
 }
 
 std::string Part::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
@@ -272,33 +326,31 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
 
 
 std::string DCCSend::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
-    (void)Clients;
-    
     if (tokens.size() < 3) {
-        return "Usage: SENDFILE <filename> <recipient>\n";
+        return "Usage: SENDFILE <recipient> <filename>\n";
     }
-    
-    std::string filename = tokens[1];
-    std::string recipient = tokens[2];
-    
-    // Check if file exists
-    FILE *file = fopen(filename.c_str(), "rb");
-    if (!file) {
-        return "Error: File " + filename + " not found\n";
-    }
-    fclose(file);
-    
-    // i change the way clients are storng which channel they are in, so...
-
     (void)Channels;
-    (void)client;
-    // for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-    //     if (it->getChannelName() == client.getChannel()) {
-    //         return it->sendDCCRequest(filename, client, recipient);
-    //     }
-    // }
     
-    return "Error: You are not in a channel\n";
+    std::string recipient = tokens[1];
+    std::string filename = tokens[2];
+    
+    // Find recipient client
+    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
+        if (it->get_nick() == recipient) {
+            // Format the DCC message correctly with CTCP delimiters (\001)
+            // Note: the actual DCC parameters will be inserted by IRSSI
+            std::string dcc_message = ":" + client.get_nick() + "!~" + client.get_username() + 
+                                     "@localhost PRIVMSG " + recipient + " :\001DCC SEND " + filename + "\001\r\n";
+            
+            it->addToOutBuffer(dcc_message);
+            if (_server) {
+                _server->enableWriteEvent(it->get_fd());
+            }
+            return "DCC SEND request sent to " + recipient + " for file " + filename + "\n";
+        }
+    }
+    
+    return "Error: Recipient " + recipient + " not found\n";
 }
 
 std::string DCCAccept::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
