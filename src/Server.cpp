@@ -91,7 +91,7 @@ void Server::CheckComands(std::string str, Client &client) {
 }
 
 void Server::setupSocket() {
-    _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    _serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (_serverSocket == -1) {
         throw std::runtime_error("Failed to create server socket");
     }
@@ -120,8 +120,8 @@ void Server::listenSocket() {
 }
 
 void Server::setNonBlocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    // int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
 void Server::registerClientInQueue() {
@@ -318,7 +318,7 @@ void Server::handleClientWrite(Client &client) {
 }
 
 void Server::start() {
-    signal(SIGPIPE, SIG_IGN);
+    // signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, Server::handlesignal);
     setupSocket();
     bindSocket();
