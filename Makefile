@@ -13,15 +13,16 @@ ifeq ($(OS), Linux)
 endif
 
 SRC= main.cpp \
-	 src/Server.cpp \
-	 src/Parser.cpp \
-	 src/Channel.cpp \
-	 src/Client.cpp \
-	 src/Commands.cpp\
-	 src/Auth.cpp\
-	 src/helpCommands/authMsg.cpp\
-	 src/helpCommands/help.cpp\
-	 src/Bot.cpp \
+	src/Server.cpp \
+	src/Parser.cpp \
+	src/Channel.cpp \
+	src/Client.cpp \
+	src/Commands.cpp\
+	src/Auth.cpp\
+	src/helpCommands/authMsg.cpp\
+	src/helpCommands/help.cpp\
+	src/Bot.cpp \
+	src/BotCommand.cpp \
 	 
 
 OBJ= $(SRC:.cpp=.o)
