@@ -18,12 +18,25 @@ class Server;
 #include <unistd.h>
 #include <cstring>
 #include <map>
+#include <cstdio>
 #include <sstream>
 
 
 
 class Channel {
 private:
+    // Utility functions for string conversion (C++98 compatible replacement for std::to_string)
+    std::string numberToString(int num) {
+        std::ostringstream oss;
+        oss << num;
+        return oss.str();
+    }
+    
+    std::string numberToString(unsigned long num) {
+        std::ostringstream oss;
+        oss << num;
+        return oss.str();
+    }
     const std::string _ChannelName;
     std::vector<Client> _Clients;
     std::vector<Client> _operators;
