@@ -318,7 +318,7 @@ void Server::handleClientWrite(Client &client) {
 }
 
 void Server::start() {
-    signal(SIGPIPE, SIG_IGN);
+    // signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, Server::handlesignal);
     setupSocket();
     bindSocket();
