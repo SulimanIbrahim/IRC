@@ -64,7 +64,7 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
     std::string recipient = tokens[1];
     std::string message = Parser::join_message(tokens);
     
-    if (message.find("DCC SEND") > 0 || message.find("\001DCC SEND") > 0) {
+    if (message.find("DCC SEND") != std::string::npos || message.find("\001DCC SEND") != std::string::npos){
         return handleDCCMessage(message, client, recipient, Clients, _server);
     }
     
