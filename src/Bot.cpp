@@ -40,15 +40,15 @@ std::string Bot::getCurrentTime() const {
     return ss.str();
 }
 
-std::string Bot::getResponse(const std::string& username) {
-    std::string response =  YELLOW "Hello " + username + "! The current time is " + getCurrentTime() + "\n\n";
+std::string Bot::getResponse(std::string& channel, std::string& nickname, std::string& username, std::string& hostname) {
+    std::string response = RPL_MSG(nickname , username, hostname, channel, YELLOW "Hello " + username + "! The current time is " + getCurrentTime() + "\n\n" RESET);
     
     if (_activities.empty()) {
-        response += "You have no recorded activities yet.\n";
+        response += RPL_MSG(nickname , username, hostname, channel, "You have no recorded activities yet.\r\n");
     } else {
-        response += RESET UNDERLINE "Your recent activities:\n" RESET;
+        response += RPL_MSG(nickname , username, hostname, channel, RESET UNDERLINE "Your recent activities:\r\n" RESET);
         for (size_t i = 0; i < _activities.size(); i++) {
-            response += BOLD_GREEN + _activities[i] + "\n" + RESET;
+            response += RPL_MSG(nickname , username, hostname, channel, BOLD_GREEN + _activities[i] + "\r\n" + RESET);
         }
     }
     
