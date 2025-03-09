@@ -91,7 +91,7 @@ void Server::CheckComands(std::string str, Client &client) {
 }
 
 void Server::setupSocket() {
-    _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    _serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (_serverSocket == -1) {
         throw std::runtime_error("Failed to create server socket");
     }
