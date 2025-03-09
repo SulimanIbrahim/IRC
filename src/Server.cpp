@@ -120,8 +120,8 @@ void Server::listenSocket() {
 }
 
 void Server::setNonBlocking(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    // int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
 void Server::registerClientInQueue() {
