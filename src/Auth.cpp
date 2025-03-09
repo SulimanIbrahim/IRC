@@ -22,6 +22,9 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
     if (tokens.size() < 2) {
         return ":" + std::string(SERVER_NAME) + " 461 * PASS :Not enough parameters\r\n";
     }
+    // if (client.isPasswordEntered()) {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
     std::cout << "Password entered: " << tokens[1] << std::endl;
     std::cout << "Password expected: " << password << std::endl;
     if (password == tokens[1]) {
@@ -35,18 +38,21 @@ std::string Pass::runAuthCommands(Client &client, const std::vector<std::string>
 std::string Nick::runAuthCommands(Client &client, const std::vector<std::string>& tokens, std::string password, std::vector<Client> &Clients) {
     (void)password;
     if (tokens.size() < 2) {
-        return ERR_NOTENOUGHPARAM(tokens[1]);
+        return ": 431 * :No nickname given\r\n";
     }
 
+    // Check if nickname is already in use
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_nick() == tokens[1]) {
-            return ERR_NICKINUSE(tokens[1]);
-        }
+        // if (it->get_nick() == tokens[1]) {
+        //     return ":" + std::string(SERVER_NAME) + " 433 * " + tokens[1] + " :Nickname is already in use\r\n";
+        // }
     }
 
     client.set_nick(tokens[1]);
-    if (client.get_nick() != "" and client.get_username() != "" and client.isRegistered() == false) {
-        client.setRegistered(true);
+    
+    // If we have both NICK and USER, complete registration
+    if (client.get_nick() != "") {
+        // client.setRegistered(true);
         return sendWelcomeMessage(client);
     }
     return "";
@@ -57,14 +63,12 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
     (void)Clients;
     
     if (tokens.size() < 5) {
-        return ERR_NOTENOUGHPARAM(tokens[1]);
+        return ":" + std::string(SERVER_NAME) + " 461 * USER :Not enough parameters\r\n";
     }
 
-    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_username() == tokens[1]) {
-            return ERR_ALREADYREGISTERED(tokens[1]);
-        }
-    }
+    // if (client.get_username() != "") {
+    //     return ":" + std::string(SERVER_NAME) + " 462 * :You may not reregister\r\n";
+    // }
 
     client.set_username(tokens[1]);
     client.set_hostname(tokens[3]);
@@ -72,8 +76,8 @@ std::string User::runAuthCommands(Client &client, const std::vector<std::string>
 
 
     // If we have both NICK and USER, complete registration
-    if (client.get_nick() != "" and client.get_username() != "" and client.isRegistered() == false) {
-        client.setRegistered(true);
+    if (client.get_nick() != "") {
+        // client.setRegistered(true);
         return sendWelcomeMessage(client);
     }
     return "";

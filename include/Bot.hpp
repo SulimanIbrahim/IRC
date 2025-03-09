@@ -5,10 +5,6 @@
 #include <string>
 #include <ctime>
 
-#ifndef RPL_MSG
-#define RPL_MSG(nickname, username, hostname, channel, message) (":" + nickname + "!~" + username + "@" + hostname + "PRIVMSG "  + channel + " :" + message + "\r\n")
-#endif
-
 class Bot {
 private:
     std::vector<std::string> _activities;
@@ -19,7 +15,7 @@ public:
     ~Bot();
     
     void addActivity(const std::string& activity);
-    std::string getResponse(std::string& channel, std::string& nickname, std::string& username, std::string& hostname);    
+    std::string getResponse(const std::string& username);    
     std::string getCurrentTime() const;
 };
 

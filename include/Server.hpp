@@ -30,14 +30,16 @@
 #define MAGENTA "\033[35m"
 #define CYAN "\033[36m"
 
+#define RPL_CONNECTED(nickname) (": 001 " + nickname + " : Welcome to the IRC server!" + "\r\n")
+#define RPL_UMODEIS(hostname, channelname, mode, user)  ":" + hostname + " MODE " + channelname + " " + mode + " " + user + "\r\n"
 #define RPL_CREATIONTIME(nickname, channelname, creationtime) ": 329 " + nickname + " #" + channelname + " " + creationtime + "\r\n"
 #define RPL_CHANNELMODES(nickname, channelname, modes) ": 324 " + nickname + " #" + channelname + " " + modes + "\r\n"
 #define RPL_CHANGEMODE(hostname, channelname, mode, arguments) (":" + hostname + " MODE #" + channelname + " " + mode + " " + arguments + "\r\n")
+#define RPL_NICKCHANGE(oldnickname, nickname) (":" + oldnickname + " NICK " + nickname + "\r\n")
 #define RPL_JOINMSG(hostname, ipaddress, channelname) (":" + hostname + "@" + ipaddress + " JOIN #" + channelname + "\r\n")
 #define RPL_NAMREPLY(nickname, channelname, clientslist) (": 353 " + nickname + " @ #" + channelname + " :" + clientslist + "\r\n")
 #define RPL_ENDOFNAMES(nickname, channelname) (": 366 " + nickname + " #" + channelname + " :END of /NAMES list" + "\r\n")
 #define RPL_TOPICIS(nickname, channelname, topic) (": 332 " + nickname + " #" +channelname + " :" + topic + "\r\n")
-#define RPL_MSG(nickname, username, hostname, channel, message) (":" + nickname + "!~" + username + "@" + hostname + "PRIVMSG "  + channel + " :" + message + "\r\n")
 
 ///////// ERRORS ////////////////
 #define ERR_NEEDMODEPARM(channelname, mode) (": 696 #" + channelname + " * You must specify a parameter for the key mode. " + mode + "\r\n")

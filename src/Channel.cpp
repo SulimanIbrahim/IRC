@@ -54,7 +54,11 @@ std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
         if (it->get_nick() == client.get_nick())
         {
             _Clients.push_back(*it);
-            return  RPL_JOINMSG(it->get_hostname(), it->get_ip() ,getChannelName()); 
+            std::string res = RPL_JOINMSG(it->get_hostname(), "127.0.0.1" ,getChannelName()); 
+            return 	 res + \
+			RPL_TOPICIS(it->get_nick(),getChannelName(),showTopic()) + \
+			RPL_NAMREPLY(it->get_nick(),getChannelName(), "") + \
+			RPL_ENDOFNAMES(it->get_nick(),getChannelName());
         }
     }
     return "Client " + client.get_nick() + " not found\n";
@@ -70,7 +74,7 @@ std::string Channel::listClients()
 
 void Channel::sendMessage(std::string message, Client &client, std::vector<Client> &serv_Clients)
 {
-    std::string message_to_send = RPL_MSG(client.get_nick(), client.get_username(), client.get_hostname(), _ChannelName, message); 
+    std::string message_to_send =  ":" +client.get_nick() +  "!~" + client.get_username() + "@localhost PRIVMSG "  + _ChannelName + " :" + message + "\n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_fd() != client.get_fd())

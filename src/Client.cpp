@@ -37,13 +37,13 @@ void Client::addActivity(const std::string& activity) {
     _bot.addActivity(activity);
 }
 
-std::string Client::getBotResponse(std::string channel) {
-    return _bot.getResponse(channel, _nickname, _username, _hostname);
+std::string Client::getBotResponse() {
+    return _bot.getResponse(_username);
 }
 
 bool Client::isAuthentificated()
 {
-    if (password_entered and registered)
+    if (_username != "" && _nickname != "" && password_entered)
         return true;
     return false;
 };
@@ -150,18 +150,4 @@ bool Client::is_inChannel(std::string channel)
             return true;
     }
     return false;
-}
-
-bool Client::isRegistered()
-{
-    return registered;
-}
-
-void Client::setRegistered(bool value)
-{
-    registered = value;
-    
-    if (value) {
-        addActivity("Registered");
-    }
 }
