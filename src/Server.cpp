@@ -12,9 +12,6 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _commands["privmsg"] = new Privmsg(this);
     _commands["join"] = new Join(this);
     _commands["kick"] = new Kick(this);
-    _commands["sendfile"] = new DCCSend(this);
-    _commands["accept"] = new DCCAccept(this);
-    _commands["reject"] = new DCCReject(this);
     _commands["mode"] = new Mode(this);
     _commands["invite"] = new Invite(this);
     _commands["part"] = new Part(this);
@@ -60,6 +57,8 @@ std::string Server::ParseComands(std::string str, Client &client) {
         return Commands::Help();
     if (cmd == "cap")
         return _commands["cap"]->execute(client, tokens, Channels, Clients);
+    if (cmd == "ping")
+        return _commands["ping"]->execute(client, tokens, Channels, Clients);
     if (cmd == "join" && tokens[1] == ":")
         return "Created and joined channel " + tokens[1] + "\n";
     if (_auth_commands.find(cmd) != _auth_commands.end()) {
@@ -93,17 +92,16 @@ void Server::setupSocket() {
         throw std::runtime_error("Failed to create server socket");
     }
     setNonBlocking(_serverSocket);
-    int opt = 1;
-    if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        throw std::runtime_error("Failed to set socket options");
-    }
+    // int opt = 1;
+    // if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+    //     throw std::runtime_error("Failed to set socket options");
+    // }
 }
 
 void Server::bindSocket() {
     _server_addr.sin_family = AF_INET;
     _server_addr.sin_port = htons(_port);
     _server_addr.sin_addr.s_addr = INADDR_ANY;
-    // _server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");;
     if (bind(_serverSocket, (struct sockaddr*)&_server_addr, sizeof(_server_addr)) == -1) {
         throw std::runtime_error("Failed to bind server socket");
     }
@@ -117,7 +115,6 @@ void Server::listenSocket() {
 }
 
 void Server::setNonBlocking(int fd) {
-    // int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
@@ -140,8 +137,10 @@ void Server::acceptClients() {
     int client_fd;
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
-    
 
+    if (online_clients >= 4000) {
+        return;
+    }
     client_fd = accept(_serverSocket, (struct sockaddr*)&client_addr, &client_addr_size);
     if (client_fd < 0) {
         if (errno != EWOULDBLOCK) {
@@ -150,12 +149,6 @@ void Server::acceptClients() {
         return;
     }
     online_clients++;
-    if (online_clients >= 5000) {
-        close(client_fd);
-        online_clients--;
-        return;
-    }
-    std::cout << "client_fd: " << client_fd << std::endl;
     setNonBlocking(client_fd);
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
@@ -163,11 +156,6 @@ void Server::acceptClients() {
     Client client(client_fd, ip);
     Clients.push_back(client);
     registerClientInQueue();
-    // sendProgressBar(client_fd);
-    // sendAnimatedText(client_fd, "Welcome to the 500ISE server! Type 'auth' to authenticate\n");
-    // std::vector<std::string> tokens = Parser::split("join General", ' ');
-    // sendAnimatedText(client_fd, _commands["join"]->execute(client, tokens, Channels, Clients));
-    // int bytes_sent = sendTypingEffect(client_fd, banner, 10);
 }
 
 void Server::registerServerInQueue() {
@@ -248,7 +236,6 @@ void Server::handleClientMessage(Client &client) {
     }
     buffer[bytes] = '\0';
     std::string message(buffer);
-    // std::replace(message.begin(), message.end(), '\n', ' ');
     std::replace(message.begin(), message.end(), '\r', ' ');
     processMessage(client, message);
 }
@@ -315,7 +302,6 @@ void Server::handleClientWrite(Client &client) {
 }
 
 void Server::start() {
-    // signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, Server::handlesignal);
     setupSocket();
     bindSocket();
@@ -327,19 +313,4 @@ void Server::start() {
     while (g_running) {
         handleEvents();
     }
-}
-
-void Server::queueMessageForClient(int client_fd, const std::string& message) {
-    // Find the client with this fd
-    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_fd() == client_fd) {
-            // Add to the client's output buffer
-            it->addToOutBuffer(message);
-            // Enable write events for this client
-            enableWriteEvent(client_fd);
-            return;
-        }
-    }
-    // If we get here, the client wasn't found (might have disconnected)
-    std::cerr << "Warning: Tried to queue message for non-existent client (fd: " << client_fd << ")" << std::endl;
 }
