@@ -13,11 +13,6 @@ Part::Part(Server* server) : Commands(server) {}
 Join::Join(Server* server) : Commands(server) {}
 Invite::Invite(Server* server) : Commands(server) {}
 Kick::Kick(Server* server) : Commands(server) {}
-DCCSend::DCCSend(Server* server) : Commands(server) {}
-DCCAccept::DCCAccept(Server* server) : Commands(server) {}
-// Pubmsg::Pubmsg(Server* server) : Commands(server) {}
-// List::List(Server* server) : Commands(server) {}
-DCCReject::DCCReject(Server* server) : Commands(server) {}
 Mode::Mode(Server* server) : Commands(server) {}
 Cap::Cap(Server* server) : Commands(server) {}
 Ping::Ping(Server* server) : Commands(server) {}
@@ -88,7 +83,7 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == recipient) {
             if (client.is_inChannel(recipient)) {
-                if (tokens[2] == "BOT")
+                if (tokens[2] == ":BOT")
                     return client.getBotResponse(recipient);
                 it->sendMessage(message, client, Clients);
                 return "\n";
@@ -143,6 +138,8 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
             {
                 client.addChannel(channel_name);
                 client.addActivity("Joined channel " + tokens[1]);
+                it->sendMessage(RPL_JOINMSG(client.get_hostname(), client.get_ip() ,it->getChannelName()), client, Clients);
+                return RPL_JOINMSG(client.get_hostname(), client.get_ip() ,it->getChannelName());
             }
             return result;
         }
@@ -154,7 +151,7 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
     }
     client.addChannel(channel_name);
     client.addActivity("Created and joined channel " + channel_name);
-    return "Created and joined channel " + channel_name + "\n";
+    return RPL_JOINMSG(client.get_hostname(), client.get_ip() ,channel_name);
 }
 
 std::string Invite::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
@@ -224,40 +221,6 @@ std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std:
     return "the channel " + channel_name + " does not exist\n";
 }
 
-// std::string Pubmsg::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-//     (void)Ignore_Clients;
-//     (void)client;
-//     (void)tokens;
-//     (void)Channels;
-//     // if (tokens.size() != 2) {
-//         return BLUE "Pubmsg <message>\n" RESET;
-//     // }
-//     // if (client.getChannel() == "General") {
-//     //     return "You can't send a public message in the General channel\n";
-//     // }
-//     // std::string message = Parser::join_message(tokens);
-//     // for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-//     //     if (it->getChannelName() == client.getChannel()) {
-//     //         it->sendMessage(message, client);
-//     //         return "message sent\n";
-//     //     }
-//     // }
-//     // return "the channel " + client.getChannel() + " does not exist\n";
-// }
-
-// std::string List::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-//     (void)Ignore_Clients;
-//     (void)tokens;
-//     if (client.getChannel() == "General") {
-//         return "You can't list the clients in the General channel\n";
-//     }
-//     std::string list = "Channels:\n";
-//     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
-//         if (it->getChannelName() == client.getChannel())
-//             list += it->listClients();
-//     }
-//     return list;
-// }
 
 std::string Topic::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
@@ -325,55 +288,6 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
     return "";
 }
 
-
-std::string DCCSend::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
-    if (tokens.size() < 3) {
-        return "Usage: SENDFILE <recipient> <filename>\n";
-    }
-    (void)Channels;
-    
-    std::string recipient = tokens[1];
-    std::string filename = tokens[2];
-    
-    // Find recipient client
-    for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
-        if (it->get_nick() == recipient) {
-            // Format the DCC message correctly with CTCP delimiters (\001)
-            // Note: the actual DCC parameters will be inserted by IRSSI
-            std::string dcc_message = ":" + client.get_nick() + "!~" + client.get_username() + 
-                                     "@localhost PRIVMSG " + recipient + " :\001DCC SEND " + filename + "\001\r\n";
-            
-            it->addToOutBuffer(dcc_message);
-            if (_server) {
-                _server->enableWriteEvent(it->get_fd());
-            }
-            return "DCC SEND request sent to " + recipient + " for file " + filename + "\n";
-        }
-    }
-    
-    return "Error: Recipient " + recipient + " not found\n";
-}
-
-std::string DCCAccept::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-    (void)Ignore_Clients;
-    (void)Channels;
-    (void)client;
-    (void)tokens;
-    
-    // DCC Accept is now handled directly by the client
-    return "DCC file transfers are handled directly between clients. Your IRC client should automatically handle incoming transfers.\n";
-}
-
-std::string DCCReject::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-    (void)Ignore_Clients;
-    (void)Channels;
-    (void)client;
-    (void)tokens;
-    
-    // DCC Reject is now handled directly by the client
-    return "DCC file transfers are handled directly between clients. Use your IRC client's commands to reject transfers.\n";
-}
-
 std::string Ping::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
     (void)Channels;
@@ -403,27 +317,3 @@ std::string Quit::execute(Client &client, std::vector<std::string> &tokens, std:
     (void)tokens;
     return "Goodbye\n";
 }
-
-// std::string Commands::Help() {
-//     std::string help = "\033[1;32m";
-//     help += "Available commands:\n";
-//     help += "JOIN <channel> [password] - Join a channel\n";
-//     help += "LEAVE - Leave the current channel\n";
-//     help += "PRIVMSG <recipient> <message> - Send a private message\n";
-//     help += "PUBMSG <message> - Send a message to the channel\n";
-//     help += "KICK <user> - Kick a user from the channel (operators only)\n";
-//     help += "INVITE <user> - Invite a user to the channel (operators only)\n";
-//     help += "TOPIC - View the channel topic\n";
-//     help += "LIST - List users in the channel\n";
-//     help += "MODE <mode> [args] - Set channel modes (operators only)\n";
-//     help += "  +i/-i - Set/unset invite-only mode\n";
-//     help += "  +t/-t - Set/unset topic restriction mode\n";
-//     help += "  +k/-k <password> - Set/unset channel password\n";
-//     help += "  +o/-o <user> - Give/take operator status\n";
-//     help += "SENDFILE <filename> <recipient> - Send a file via DCC\n";
-//     help += "ACCEPT <sender> <filename> - Accept a DCC file transfer\n";
-//     help += "REJECT <sender> <filename> - Reject a DCC file transfer\n";
-//     help += "AUTH - Show authentication commands\n";
-//     help += "\033[0m";
-//     return help;
-// }
