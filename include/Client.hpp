@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <map>
-
+#include <algorithm>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
