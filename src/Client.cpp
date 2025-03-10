@@ -1,8 +1,6 @@
 #include "../include/Client.hpp"
 
 Client::Client(int _clientSockets, std::string ip):password_entered(false), _username(""), _nickname("") {
-    std::cout << "Client constructor" << std::endl;
-    std::cout << "Client socket: " << _clientSockets << std::endl;
     _fd = _clientSockets;
     _ip = ip;
     _username = "";
@@ -12,13 +10,10 @@ Client::Client(int _clientSockets, std::string ip):password_entered(false), _use
 }
 
 Client::~Client()
-{
-    std::cout << "Client destructor has been called" << std::endl;
-}
+{}
 
 Client::Client(const Client &client)
 {
-    std::cout << "Client copy constructor" << std::endl;
     _fd = client._fd;
     _username = client._username;
     _nickname = client._nickname;
@@ -27,6 +22,7 @@ Client::Client(const Client &client)
         channels.push_back(*it);
     }
     password_entered = client.password_entered;
+    registered = client.registered;
     _realname = client._realname;
     _hostname = client._hostname;
     _bot = client._bot; // Copy bot data
