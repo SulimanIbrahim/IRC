@@ -64,34 +64,6 @@ class Kick : public Commands {
         Kick(Server* server);
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
-class DCCSend : public Commands {
-    public:
-        DCCSend(Server* server);
-        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-};
-
-class DCCAccept : public Commands {
-    public:
-        DCCAccept(Server* server);
-        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-};
-// class Pubmsg : public Commands {
-//     public:
-//         Pubmsg(Server* server);
-//         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-// };
-
-// class List : public Commands {
-//     public:
-//         List(Server* server);
-//         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-// };
-
-class DCCReject : public Commands {
-    public:
-        DCCReject(Server* server);
-        std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
-};
 class Mode : public Commands {
     public:
         Mode(Server* server);
@@ -120,11 +92,5 @@ class Notice : public Commands {
         Notice(Server* server);
         std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients);
 };
-
-// class BotCommand : public Commands {
-// public:
-//     BotCommand(Server* server);
-//     std::string execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients);
-// };
 
 #endif

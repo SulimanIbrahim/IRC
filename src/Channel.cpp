@@ -51,7 +51,7 @@ std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
         return "Client " + client.get_nick() + " already in channel " + _ChannelName + "\n";
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it)
     {
-        if (it->get_nick() == client.get_nick())
+        if (it->get_fd() == client.get_fd())
         {
             _Clients.push_back(*it);
             return  RPL_JOINMSG(it->get_hostname(), it->get_ip() ,getChannelName()); 
@@ -70,7 +70,7 @@ std::string Channel::listClients()
 
 void Channel::sendMessage(std::string message, Client &client, std::vector<Client> &serv_Clients)
 {
-    std::string message_to_send = RPL_MSG(client.get_nick(), client.get_username(), client.get_hostname(), _ChannelName, message); 
+    std::string message_to_send = RPL_MSG(client.get_nick(), client.get_hostname(), _ChannelName, message); 
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_fd() != client.get_fd())
@@ -124,54 +124,6 @@ std::string Channel::kickClient(Client client, std::string client_to_kick)
     }
     return "Client " + client_to_kick + " not found in channel " + _ChannelName + "\n";
 };
-
-std::string Channel::sendDCCRequest(std::string filename, Client &client, std::string to)
-{
-    // Find the recipient
-    Client* recipient = NULL;
-    for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it) {
-        if (it->get_nick() == to) {
-            recipient = &(*it);
-            break;
-        }
-    }
-    
-    if (!recipient) {
-        return "Error: Client " + to + " not found in channel " + _ChannelName + "\n";
-    }
-    
-    // Format the DCC SEND message according to IRC protocol
-    // Format: :<sender> PRIVMSG <recipient> :<DCC SEND filename ipaddress port filesize>
-    unsigned long ip = inet_addr(client.get_ip().c_str());
-    
-    // In a real DCC implementation, the sender would open a port and listen
-    // For simplicity, we'll use a placeholder port
-    int port = 12345; // This would normally be dynamically assigned
-    
-    // Get file size
-    FILE *file = fopen(filename.c_str(), "rb");
-    if (!file) {
-        return "Error: File " + filename + " not found\n";
-    }
-    fseek(file, 0, SEEK_END);
-    unsigned long filesize = ftell(file);
-    fclose(file);
-    
-    // Create the DCC SEND message
-    std::string dcc_msg = ":" + client.get_nick() + " PRIVMSG " + to + 
-                         " :\001DCC SEND " + filename + " " + 
-                         numberToString(ip) + " " + 
-                         numberToString(port) + " " + 
-                         numberToString(filesize) + "\001\r\n";
-    
-    // Forward the message to the recipient
-    // if (send(recipient->get_fd(), dcc_msg.c_str(), dcc_msg.length(), 0) < 0) {
-    //     return "Error: Failed to send DCC request\n";
-    // }
-    
-    return "DCC request sent to " + to + " for file " + filename + "\n";
-}
-
 
 std::string Channel::showTopic()
 {

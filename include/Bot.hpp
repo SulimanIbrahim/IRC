@@ -5,9 +5,8 @@
 #include <string>
 #include <ctime>
 
-#ifndef RPL_MSG
-#define RPL_MSG(nickname, username, hostname, channel, message) (":" + nickname + "!~" + username + "@" + hostname + "PRIVMSG "  + channel + " :" + message + "\r\n")
-#endif
+#define RPL_BOT_MSG(nickname, username, hostname, channel, message) (":" + nickname + "!~" + username + "@" + hostname + " PRIVMSG "  + channel + " " + message + "\r\n")
+
 
 class Bot {
 private:
