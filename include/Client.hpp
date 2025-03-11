@@ -29,8 +29,8 @@ class Client {
         std::string _realname;
         std::string _nickname;
         std::string _hostname;
-		std::string _port;
-        std::vector<std::string> channels;
+        std::vector<std::string> _channels;
+		    std::string _port;
         Bot _bot;
         std::string _outBuffer;
 

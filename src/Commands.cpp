@@ -96,7 +96,7 @@ std::string Privmsg::execute(Client &client, std::vector<std::string> &tokens, s
 
 std::string Part::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
 
-    if (tokens.size() != 2) {
+    if (tokens.size() < 2) {
         return BLUE "Part <Channel>\n" RESET;
     }
     (void)Clients;
@@ -155,20 +155,19 @@ std::string Join::execute(Client &client, std::vector<std::string> &tokens, std:
 }
 
 std::string Invite::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
-    if (tokens.size() != 3) {
+    if (tokens.size() < 3) {
         return BLUE "Invite <nickname> <Channel>\n" RESET;
     }
     std::vector<Client>::iterator client_to_invite;
     std::string channel_name = tokens[2];
     std::string client_to_add = tokens[1];
+    if (client_to_add == client.get_nick())
+        return "You cannot invite yourself\n";
     if (!client.is_inChannel(channel_name))
         return "You are not in the channel " + channel_name + "\n";
     for (client_to_invite = Clients.begin(); client_to_invite != Clients.end(); ++client_to_invite) {
         if (client_to_invite->get_nick() == client_to_add) {
-            if (client_to_invite->is_inChannel(channel_name))
-                return "The client " + client_to_add + " is already in the channel " + channel_name + "\n";
-            else
-                break;
+            break;
         }
     }
     if (client_to_invite == Clients.end())
@@ -194,26 +193,34 @@ std::string Invite::execute(Client &client, std::vector<std::string> &tokens, st
     return "the channel " + channel_name + " does not exist\n";
 }
 
-std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-    (void)Ignore_Clients;
-    if (tokens.size() != 3) {
+std::string Kick::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Clients) {
+    std::vector<Client>::iterator client_to_kick;
+    if (tokens.size() < 3) {
         return BLUE "Kick <Channel> <nickname>\n" RESET;
     }
     std::string channel_name = tokens[1];
+    if (tokens[2] == client.get_nick())
+        return "You cannot kick yourself\n";
     if (!client.is_inChannel(channel_name))
         return "You are not in the channel " + channel_name + "\n";
+    for (client_to_kick = Clients.begin(); client_to_kick != Clients.end(); ++client_to_kick) {
+        if (client_to_kick->get_nick() == tokens[2]) {
+            break;
+        }
+    }
+    if (client_to_kick == Clients.end())
+        return "The client " + tokens[2] + " does not exist\n";
     for (std::vector<Channel>::iterator it = Channels.begin(); it != Channels.end(); ++it) {
         if (it->getChannelName() == channel_name) {
-            std::string result = it->kickClient(client, tokens[1]);  
+            std::string result = it->kickClient(client, tokens[2]);
             if (result.find("kicked") != std::string::npos) {
-                client.addActivity("Kicked " + tokens[1] + " from channel " + channel_name);
-                for (std::vector<Client>::iterator client_to_kick = Ignore_Clients.begin(); client_to_kick != Ignore_Clients.end(); ++client_to_kick) {
-                    if (client_to_kick->get_nick() == tokens[2]) {
-                        client_to_kick->removeChannel(channel_name);
-                        client_to_kick->addActivity("Kicked from channel " + channel_name);
-                        break;
-                    }
+                client_to_kick->removeChannel(channel_name);
+                client_to_kick->addActivity(client.get_nick() + " kicked you from channel " + channel_name + "\n");
+                client_to_kick->addToOutBuffer(":" + client.get_nick() + " KICK " + channel_name + " " + client_to_kick->get_nick() + "\n");
+                if (_server) {
+                    _server->enableWriteEvent(client_to_kick->get_fd());
                 }
+                return result;
             }
             return result;
         }
@@ -243,7 +250,7 @@ std::string Topic::execute(Client &client, std::vector<std::string> &tokens, std
 
 std::string Mode::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
-    if (tokens.size() < 4) {
+    if (tokens.size() < 3) {
         return "Usage: MODE <channel> <+/-mode> {args}\n";
     }
     std::string channel = tokens[1];
