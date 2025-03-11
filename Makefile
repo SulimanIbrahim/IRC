@@ -28,7 +28,7 @@ OBJ= $(SRC:.cpp=.o)
 
 HEADERS= ./include/Server.hpp ./include/Parser.hpp ./include/Channel.hpp ./include/Client.hpp ./include/Commands.hpp ./include/Auth.hpp ./include/Bot.hpp
 
-%.o: %.cpp $(HEADERS)
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: all
@@ -57,6 +57,7 @@ rmirssi2:
 
 
 $(NAME): $(OBJ) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) $(LDFLAGS)
 
 clean:
 	rm -f $(OBJ)
@@ -91,6 +92,13 @@ endif
 
 # Make all depend on install-deps
 all: install-deps $(NAME)
-	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME) $(LDFLAGS)
+
+src/Server.o: src/Server.cpp ./include/Server.hpp
+src/Parser.o: src/Parser.cpp ./include/Parser.hpp
+src/Channel.o: src/Channel.cpp ./include/Channel.hpp
+src/Client.o: src/Client.cpp ./include/Client.hpp
+src/Commands.o: src/Commands.cpp ./include/Commands.hpp
+src/Auth.o: src/Auth.cpp ./include/Auth.hpp
+src/Bot.o: src/Bot.cpp ./include/Bot.hpp
 
 .PHONY: all clean fclean re run nc install-deps test
