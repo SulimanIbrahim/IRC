@@ -7,6 +7,7 @@ Client::Client(int _clientSockets, std::string ip):password_entered(false), _use
     _nickname = "";
     _realname = "";
     _hostname = "";
+	_port = "";
 }
 
 Client::~Client()
@@ -15,6 +16,7 @@ Client::~Client()
 Client::Client(const Client &client)
 {
     _fd = client._fd;
+	_ip = client._ip;
     _username = client._username;
     _nickname = client._nickname;
     for (std::vector<std::string>::const_iterator it = client._channels.begin(); it != client._channels.end(); ++it)
@@ -25,6 +27,7 @@ Client::Client(const Client &client)
     registered = client.registered;
     _realname = client._realname;
     _hostname = client._hostname;
+	_port = client._port;
     _bot = client._bot; // Copy bot data
 }
 
@@ -52,6 +55,11 @@ void Client::set_nick(std::string nickname)
         addActivity("Changed nickname to " + nickname);
     }
 }
+
+void Client::set_port(std::string port)
+{
+	_port = port;
+}
 void Client::set_username(std::string username)
 {
     _username = username;
@@ -78,6 +86,10 @@ void Client::removeChannel(std::string channel)
 }
 
 
+std::string Client::get_port()
+{
+	return _port;
+}
 
 int Client::get_fd()
 {
