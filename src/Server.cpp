@@ -92,10 +92,10 @@ void Server::setupSocket() {
         throw std::runtime_error("Failed to create server socket");
     }
     setNonBlocking(_serverSocket);
-    // int opt = 1;
-    // if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-    //     throw std::runtime_error("Failed to set socket options");
-    // }
+    int opt = 1;
+    if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+        throw std::runtime_error("Failed to set socket options");
+    }
 }
 
 void Server::bindSocket() {
@@ -153,7 +153,10 @@ void Server::acceptClients() {
     char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client_addr.sin_addr, ip, INET_ADDRSTRLEN);
     std::cout << CYAN << "Accepted connection from " << RESET << ip << std::endl;
-    Client client(client_fd, ip);
+    Client client(client_fd, std::string(ip));
+    std::stringstream ss;
+    ss << ntohs(client_addr.sin_port);
+    client.set_port(ss.str()); // Set the client port using the set_port function
     Clients.push_back(client);
     registerClientInQueue();
 }
@@ -218,7 +221,11 @@ void Server::handleEvents() {
 }
 
 void Server::processMessage(Client &client, std::string message) {
-    std::cout << "Received message from client:(" << message << ")"<< std::endl;
+    std::string messageWithoutNewline = message;
+    if (!message.empty() && message.back() == '\n') {
+        messageWithoutNewline.pop_back();
+    }
+    std::cout << "Received message from client[" << GREEN << client.get_ip() << RESET << "],port[" << YELLOW << client.get_port() << RESET << "]:(" << messageWithoutNewline << ")" << RESET << std::endl;
     CheckComands(message, client);
 }
 
