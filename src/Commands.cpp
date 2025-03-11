@@ -16,7 +16,6 @@ Kick::Kick(Server* server) : Commands(server) {}
 Mode::Mode(Server* server) : Commands(server) {}
 Cap::Cap(Server* server) : Commands(server) {}
 Ping::Ping(Server* server) : Commands(server) {}
-Quit::Quit(Server* server) : Commands(server) {}
 Notice::Notice(Server* server) : Commands(server) {}
 
 static std::string handleDCCMessage(const std::string& message, Client& client, 
@@ -275,14 +274,12 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
     for (std::string::iterator it = command.begin(); it != command.end(); ++it) {
         *it = toupper(*it);
     }
-
     if (command == "CAP") {
         if (tokens.size() >= 2) {
             std::string subcommand = tokens[1];
             for (std::string::iterator it = subcommand.begin(); it != subcommand.end(); ++it) {
                 *it = toupper(*it);
             }
-
             if (subcommand == "LS") {
                 return ":" + std::string(SERVER_NAME) + " CAP * LS :multi-prefix\r\n";
             } else if (subcommand == "REQ") {
@@ -298,9 +295,6 @@ std::string Cap::execute(Client &client, std::vector<std::string> &tokens, std::
 std::string Ping::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
     (void)Ignore_Clients;
     (void)Channels;
-    // if (tokens.size() > 1){
-    //     std::cerr << "PING command requires at least 1 argument\n";
-    // }
     (void)client;
     (void)tokens;
     return "PONG \n";
@@ -317,10 +311,3 @@ std::string Notice::execute(Client &client, std::vector<std::string> &tokens, st
     return "Notice: " + message + "\n";
 }
 
-std::string Quit::execute(Client &client, std::vector<std::string> &tokens, std::vector<Channel> &Channels, std::vector<Client> &Ignore_Clients) {
-    (void)Ignore_Clients;
-    (void)client;
-    (void)Channels;
-    (void)tokens;
-    return "Goodbye\n";
-}

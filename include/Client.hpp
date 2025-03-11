@@ -30,7 +30,7 @@ class Client {
         std::string _nickname;
         std::string _hostname;
         std::vector<std::string> _channels;
-		    std::string _port;
+		std::string _port;
         Bot _bot;
         std::string _outBuffer;
 

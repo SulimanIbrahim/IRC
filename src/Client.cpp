@@ -3,6 +3,9 @@
 Client::Client(int _clientSockets, std::string ip):password_entered(false), _username(""), _nickname("") {
     _fd = _clientSockets;
     _ip = ip;
+    registered = false;
+    password_entered = false;
+    _bot = Bot();
     _username = "";
     _nickname = "";
     _realname = "";
@@ -28,10 +31,9 @@ Client::Client(const Client &client)
     _realname = client._realname;
     _hostname = client._hostname;
 	_port = client._port;
-    _bot = client._bot; // Copy bot data
+    _bot = client._bot;
 }
 
-// Bot related methods for Client
 void Client::addActivity(const std::string& activity) {
     _bot.addActivity(activity);
 }

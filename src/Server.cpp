@@ -3,7 +3,6 @@
 bool g_running = false;
 
 Server::Server(int ac, char **av) : _parser(ac, av) {
-    banner = "\033[1;34m  _   _ _____ _      _      ____ \n | | | | ____| |    | |    |  _  |  \n | |_| |  _| | |    | |    | | | |\n |  _  | |___| |___ | |___ | |_| |\n |_| |_|_____|_____|_____| |_____|\n\n\033[0m";
     _port = _parser.getPort();
     _password = _parser.getPassword();
     _serverSocket = -1;
@@ -22,7 +21,6 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
     _auth_commands["pass"] = new Pass();
     _auth_commands["nick"] = new Nick();
     _auth_commands["user"] = new User();
-    std::cout << "Server initialized with port " << _port << " and password " << _password << std::endl;
 }
 
 Server::~Server() {
@@ -50,8 +48,6 @@ std::string Server::ParseComands(std::string str, Client &client) {
     std::string cmd = tokens[0];
     for (std::string::iterator it = cmd.begin(); it != cmd.end(); ++it)
         *it = tolower(*it);
-    std::cout << "Command: " << cmd << std::endl;
-    // Allow CAP negotiation before authentication
     if (cmd == "auth")
         return Commands::AuthMsg();
     if (cmd == "help")
@@ -123,10 +119,7 @@ void Server::registerClientInQueue() {
     int client_fd = Clients.back().get_fd();
     struct kevent events[2];
     
-    // Register for read events
     EV_SET(&events[0], client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-    
-    // Register for write events - initially disabled 
     EV_SET(&events[1], client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
     
     if (kevent(kq_fd, events, 2, NULL, 0, NULL) < 0) {
@@ -144,9 +137,6 @@ void Server::acceptClients() {
     }
     client_fd = accept(_serverSocket, (struct sockaddr*)&client_addr, &client_addr_size);
     if (client_fd < 0) {
-        if (errno != EWOULDBLOCK) {
-            std::cerr << "Failed to accept client: " << strerror(errno) << std::endl;
-        }
         return;
     }
     online_clients++;
@@ -168,7 +158,6 @@ void Server::registerServerInQueue() {
     if (kevent(kq_fd, &server_connection_event, 1, NULL, 0, NULL) == -1) {
         throw std::runtime_error("Failed to register server socket with kqueue");
     }
-    std::cout << "Server registered in kqueue" << std::endl;
 }
 
 void Server::handleDisconnections(int fd) {
@@ -189,7 +178,6 @@ void Server::handleEvents() {
     if (nev == -1) {
         throw std::runtime_error("Failed to poll events from kqueue");
     }
-    std::cout << "Received " << nev << " events" << std::endl;
     std::cout << BLUE <<"Online clients: " << online_clients << RESET << std::endl;
     for (int i = 0; i < nev; i++) {
         if (events[i].ident == (unsigned int)_serverSocket) {
@@ -197,10 +185,6 @@ void Server::handleEvents() {
         }
         else {
             int client_fd = events[i].ident;
-            if (events[i].flags & EV_EOF) {
-                handleDisconnections(client_fd);
-                continue;
-            }
             if (events[i].filter == EVFILT_READ) {
                 for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
                     if (it->get_fd() == client_fd) {
@@ -208,6 +192,10 @@ void Server::handleEvents() {
                         break;
                     }
                 }
+            }
+            if (events[i].flags & EV_EOF) {
+                handleDisconnections(client_fd);
+                continue;
             }
             if (events[i].filter == EVFILT_WRITE) {
                 for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
@@ -233,21 +221,13 @@ void Server::processMessage(Client &client, std::string message) {
 void Server::handleClientMessage(Client &client) {
     char buffer[BUFFER_SIZE];
     int bytes = recv(client.get_fd(), buffer, BUFFER_SIZE, 0);
-    if (bytes < 0) {
-        if (errno != EWOULDBLOCK) {
-            if (errno == ECONNRESET) {
-                handleDisconnections(client.get_fd());
-            } else {
-                std::cout << "Failed to receive message from client: " << strerror(errno) << std::endl;
-            }
-        }
+    if (bytes > 0){
+        buffer[bytes] = '\0';
+        std::string message(buffer);
+        std::replace(message.begin(), message.end(), '\r', ' ');
+        processMessage(client, message);
     }
-    buffer[bytes] = '\0';
-    std::string message(buffer);
-    std::replace(message.begin(), message.end(), '\r', ' ');
-    processMessage(client, message);
 }
-
 
 void Server::initKqueue() {
     kq_fd = kqueue();
@@ -256,13 +236,11 @@ void Server::initKqueue() {
     }
 }
 
-
 void Server::handlesignal(int sig) {
     if (sig == SIGINT) {
         g_running = false;
     }
 }
-
 
 void Server::enableWriteEvent(int client_fd) {
     struct kevent event;
@@ -282,35 +260,25 @@ void Server::handleClientWrite(Client &client) {
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
         return ;
     }
-        
     ssize_t bytes_sent = send(client.get_fd(), buffer.c_str(), buffer.size(), 0);
-    if (bytes_sent < 0) {
-        EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-            if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
-                std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-        if (errno == EPIPE) {
-            std::cerr << "Broken pipe, client disconnected" << std::endl;
-            handleDisconnections(client.get_fd());
-        } else if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-        }
-    } else if (bytes_sent > 0) {
-        // Remove sent data from buffer
-        std::cout << "Sent " << bytes_sent << " bytes to client" << std::endl;
-        std::cout << "Buffer size before: " << buffer.size() << std::endl;
+    if (bytes_sent >= 0) {
         buffer.erase(0, bytes_sent);
-        std::cout << "Buffer size: " << buffer.size() << std::endl;
-        // If buffer is now empty, disable write events until needed again
         if (buffer.empty()) {
             EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
             if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
                 std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+            return;
         }
+    } else {
+        EV_SET(&event, client.get_fd(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+        if (kevent(kq_fd, &event, 1, NULL, 0, NULL) < 0)
+            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
     }
 }
 
 void Server::start() {
     signal(SIGINT, Server::handlesignal);
+    signal(SIGQUIT, Server::handlesignal);
     setupSocket();
     bindSocket();
     listenSocket();

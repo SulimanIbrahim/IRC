@@ -103,9 +103,7 @@ void Channel::sendMessage(std::string message, Client &client, std::vector<Clien
 
 std::string Channel::sendPrivateMessage(std::string message, Client &client, std::string to)
 {
-    // add a check for specific client, clients
     std::string message_to_send = ":" +client.get_nick() +  "!~" + client.get_nick() + "@localhost PRIVMSG "  + _ChannelName + " :" + message + "\n";
-    // std::cout << message_to_send << std::endl;
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_nick() == to)
@@ -130,10 +128,6 @@ std::string Channel::kickClient(Client &client, std::string client_to_kick)
         if (it->get_nick() == client_to_kick)
         {
             client.addActivity("You kicked " + client_to_kick + " from channel " + _ChannelName + "\n");
-            // if (isOperator(*it))
-            // {
-            //     _operators.erase(it);
-            // }
             _Clients.erase(it);
             return client.get_nick() + " kicked " + client_to_kick + " from channel " + _ChannelName + "\n";
         }
@@ -184,7 +178,7 @@ std::string Channel::setInviteOnly_status(std::vector<std::string> tokens)
 std::string Channel::setTopicRisterction_status(std::vector<std::string> tokens)
 {
     if (tokens.size() == 4)
-        setTopic(tokens[3]);
+        setTopic(Parser::join_message(tokens));
     else if (_Topic == "")
         return "Topic required\n";
     if (tokens[2][0] == '+')
