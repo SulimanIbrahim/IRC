@@ -92,10 +92,10 @@ void Server::setupSocket() {
         throw std::runtime_error("Failed to create server socket");
     }
     setNonBlocking(_serverSocket);
-    // int opt = 1;
-    // if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-    //     throw std::runtime_error("Failed to set socket options");
-    // }
+    int opt = 1;
+    if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+        throw std::runtime_error("Failed to set socket options");
+    }
 }
 
 void Server::bindSocket() {

@@ -35,7 +35,14 @@ std::string Channel::Invite(Client client, std::string client_to_add, std::vecto
         {
             if (it->get_nick() == client_to_add)
             {
+                it->addChannel(_ChannelName);
                 _Clients.push_back(*it);
+                it->addActivity(client.get_nick() + " invited you to channel " + _ChannelName + "\n");
+                it->addToOutBuffer(":"+ it->get_hostname() + " INVITE " + it->get_nick() + " " + _ChannelName +"\r\n");
+                it->addToOutBuffer(RPL_MSG(it->get_nick(), it->get_hostname(), _ChannelName, "Channel topic: " + _Topic));
+                if (_server) {
+                    _server->enableWriteEvent(it->get_fd());
+                }
                 return "Client " + client_to_add + " joined channel " + _ChannelName + "\n";
             }
         }
@@ -54,7 +61,11 @@ std::string Channel::JoinChannel(Client client, std::vector<Client> &Clients)
         if (it->get_fd() == client.get_fd())
         {
             _Clients.push_back(*it);
-            return  RPL_JOINMSG(it->get_hostname(), it->get_ip() ,getChannelName()); 
+            it->addToOutBuffer(RPL_MSG(it->get_nick(), it->get_hostname(), _ChannelName, "Channel topic: " + _Topic));
+            return  RPL_JOINMSG(it->get_hostname(), it->get_ip() ,getChannelName()) + \
+            RPL_TOPICIS(it->get_nick(),_ChannelName, _Topic) + \
+			RPL_NAMREPLY(it->get_nick(),_ChannelName, listClients()) + \
+			RPL_ENDOFNAMES(it->get_nick(),_ChannelName);
         }
     }
     return "Client " + client.get_nick() + " not found\n";
@@ -110,14 +121,19 @@ std::string Channel::sendPrivateMessage(std::string message, Client &client, std
 };
 
 
-std::string Channel::kickClient(Client client, std::string client_to_kick)
+std::string Channel::kickClient(Client &client, std::string client_to_kick)
 {
-    if (isOperator(client) == false)
+    if (!isOperator(client))
         return "Sorry, But you are not an operator in channel " + _ChannelName + "\n";
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
         if (it->get_nick() == client_to_kick)
         {
+            client.addActivity("You kicked " + client_to_kick + " from channel " + _ChannelName + "\n");
+            // if (isOperator(*it))
+            // {
+            //     _operators.erase(it);
+            // }
             _Clients.erase(it);
             return client.get_nick() + " kicked " + client_to_kick + " from channel " + _ChannelName + "\n";
         }
@@ -211,15 +227,19 @@ std::string Channel::setOperator_status(std::vector<std::string> tokens)
         {
             for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
             {
-                if (it->get_nick() == tokens[2])
+                if (it->get_nick() == tokens[3])
                     return "Operator already in channel\n";
             }
             for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
             {
-                if (it->get_nick() == tokens[2])
+                if (it->get_nick() == tokens[3])
                 {
                     _operators.push_back(*it);
-                    return "Operator added\n";
+                    _operators.back().addToOutBuffer(RPL_MSG(_operators.back().get_nick(), _operators.back().get_hostname() , _ChannelName, "You are now an operator in channel " + _ChannelName + "\n"));
+                    if (_server) {
+                        _server->enableWriteEvent(_operators.back().get_fd());
+                    }
+                    return ":Operator added\n";
                 }
             }
             return "Client " + tokens[2] + " not found\n";
@@ -228,7 +248,7 @@ std::string Channel::setOperator_status(std::vector<std::string> tokens)
         {
             for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
             {
-                if (it->get_nick() == tokens[2])
+                if (it->get_nick() == tokens[3])
                 {
                     _operators.erase(it);
                     return "Operator removed\n";
@@ -324,7 +344,7 @@ bool Channel::isClientInChannel(Client &client)
 {
     for (std::vector<Client>::iterator it = _Clients.begin(); it != _Clients.end(); ++it)
     {
-        if (it->get_nick() == client.get_nick())
+        if (it->get_fd() == client.get_fd())
             return true;
     }
     return false;
@@ -342,9 +362,11 @@ bool Channel::isClientInChannel(std::string &client)
 
 bool Channel::isOperator(Client &client)
 {
+    if (_operators.size() == 0)
+        return false;
     for (std::vector<Client>::iterator it = _operators.begin(); it != _operators.end(); ++it)
     {
-        if (it->get_nick() == client.get_nick())
+        if (it->get_fd() == client.get_fd())
             return true;
     }
     return false;

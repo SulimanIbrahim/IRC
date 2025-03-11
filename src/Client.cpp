@@ -17,9 +17,9 @@ Client::Client(const Client &client)
     _fd = client._fd;
     _username = client._username;
     _nickname = client._nickname;
-    for (std::vector<std::string>::const_iterator it = client.channels.begin(); it != client.channels.end(); ++it)
+    for (std::vector<std::string>::const_iterator it = client._channels.begin(); it != client._channels.end(); ++it)
     {
-        channels.push_back(*it);
+        _channels.push_back(*it);
     }
     password_entered = client.password_entered;
     registered = client.registered;
@@ -65,7 +65,7 @@ void Client::addChannel(std::string channel)
 {
     if (!is_inChannel(channel))
     {
-        channels.push_back(channel);
+        _channels.push_back(channel);
     }
 }
 
@@ -73,7 +73,7 @@ void Client::removeChannel(std::string channel)
 {
     if (is_inChannel(channel))
     {
-        channels.erase(std::remove(channels.begin(), channels.end(), channel), channels.end());
+        _channels.erase(std::remove(_channels.begin(), _channels.end(), channel), _channels.end());
     }
 }
 
@@ -140,7 +140,7 @@ std::string& Client::getOutBuffer() {
 
 bool Client::is_inChannel(std::string channel)
 {
-    for (std::vector<std::string>::iterator it = channels.begin(); it != channels.end(); ++it)
+    for (std::vector<std::string>::iterator it = _channels.begin(); it != _channels.end(); ++it)
     {
         if (*it == channel)
             return true;

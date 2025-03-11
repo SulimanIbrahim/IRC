@@ -29,7 +29,7 @@ class Client {
         std::string _realname;
         std::string _nickname;
         std::string _hostname;
-        std::vector<std::string> channels;
+        std::vector<std::string> _channels;
         Bot _bot;
         std::string _outBuffer;
 

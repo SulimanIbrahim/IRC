@@ -34,9 +34,9 @@
 // #define RPL_CHANNELMODES(nickname, channelname, modes) ": 324 " + nickname + " " + channelname + " " + modes + "\r\n"
 // #define RPL_CHANGEMODE(hostname, channelname, mode, arguments) (":" + hostname + " MODE " + channelname + " " + mode + " " + arguments + "\r\n")
 #define RPL_JOINMSG(hostname, ipaddress, channelname) (":" + hostname + "@" + ipaddress + " JOIN " + channelname + "\r\n")
-// #define RPL_NAMREPLY(nickname, channelname, clientslist) (": 353 " + nickname + " @ " + channelname + " :" + clientslist + "\r\n")
-// #define RPL_ENDOFNAMES(nickname, channelname) (": 366 " + nickname + " " + channelname + " :END of /NAMES list" + "\r\n")
-// #define RPL_TOPICIS(nickname, channelname, topic) (": 332 " + nickname + " " +channelname + " :" + topic + "\r\n")
+#define RPL_NAMREPLY(nickname, channelname, clientslist) (": 353 " + nickname + " @ " + channelname + " :" + clientslist + "\r\n")
+#define RPL_ENDOFNAMES(nickname, channelname) (": 366 " + nickname + " " + channelname + " :END of /NAMES list" + "\r\n")
+#define RPL_TOPICIS(nickname, channelname, topic) (": 332 " + nickname + " " +channelname + " :" + topic + "\r\n")
 #define RPL_MSG(nickname, hostname, channel, message) (":" + nickname + "!~" + nickname + "@" + hostname + " PRIVMSG "  + channel + " " + message + "\r\n")
 
 ///////// ERRORS ////////////////
