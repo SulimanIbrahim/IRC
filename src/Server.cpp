@@ -28,8 +28,8 @@ Server::Server(int ac, char **av) : _parser(ac, av) {
 Server::~Server() {
     if (_serverSocket != -1)
         close(_serverSocket);
-    if (kd_fd != -1)
-        close(kd_fd);
+    if (kq_fd != -1)
+        close(kq_fd);
     for (std::vector<Client>::iterator it = Clients.begin(); it != Clients.end(); ++it) {
         close(it->get_fd());
     }
