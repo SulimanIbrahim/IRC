@@ -211,8 +211,8 @@ void Server::handleEvents() {
 
 void Server::processMessage(Client &client, std::string message) {
     std::string messageWithoutNewline = message;
-    if (!message.empty() && message.back() == '\n') {
-        messageWithoutNewline.pop_back();
+    if (!message.empty() && message[message.length() - 1] == '\n') {
+        messageWithoutNewline.erase(messageWithoutNewline.length() - 1);
     }
     std::cout << "Received message from client[" << GREEN << client.get_ip() << RESET << "],port[" << YELLOW << client.get_port() << RESET << "]:(" << messageWithoutNewline << ")" << RESET << std::endl;
     CheckComands(message, client);

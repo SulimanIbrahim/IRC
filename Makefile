@@ -1,7 +1,7 @@
 NAME= ircserve
 
 CXX= c++
-CXXFLAGS= -Wall -Wextra -Werror -std=c++98
+CXXFLAGS= -Wall -Wextra -Werror -std=c++98 -g3
 
 # Colors and formatting
 BLUE := \033[1;34m
@@ -33,28 +33,28 @@ SRC= main.cpp \
 	 src/Bot.cpp
 
 # Progress bar variables
-TOTAL_FILES := $(words $(SRC))
 COUNTER := 0
 BAR_LENGTH := 40
+TOTAL_FILES := $(words $(SRC))
 
 define update_progress
-    @$(eval COUNTER=$(shell echo $$(($(COUNTER) + 1))))
-    @$(eval PERCENTAGE=$(shell echo $$(($(COUNTER) * 100 / $(TOTAL_FILES)))))
-    @$(eval FILLED=$(shell echo $$(($(COUNTER) * $(BAR_LENGTH) / $(TOTAL_FILES)))))
-    @$(eval EMPTY=$(shell echo $$(($(BAR_LENGTH) - $(FILLED)))))
-    @printf "$(CLEAR)$(CURSOR_UP)"
-    @printf "$(YELLOW)Building [$(RESET)"
-    @printf "%-*s" $(FILLED) | tr ' ' '█'
-    @printf "%-*s" $(EMPTY) | tr ' ' '.'
-    @printf "$(YELLOW)] %3d%% - %s$(RESET)\n" $(PERCENTAGE) "$<"
+    -@$(eval COUNTER=$(shell echo $$(($(COUNTER) + 1))))
+    -@$(eval PERCENTAGE=$(shell echo $$(($(COUNTER) * 100 / $(TOTAL_FILES)))))
+    -@$(eval FILLED=$(shell echo $$(($(COUNTER) * $(BAR_LENGTH) / $(TOTAL_FILES)))))
+    -@$(eval EMPTY=$(shell echo $$(($(BAR_LENGTH) - $(FILLED)))))
+    -@printf "$(CLEAR)$(CURSOR_UP)"
+    -@printf "$(YELLOW)Building [$(RESET)"
+    -@printf "%-*s" $(FILLED) | tr ' ' '█'
+    -@printf "%-*s" $(EMPTY) | tr ' ' '.'
+    -@printf "$(YELLOW)] %3d%% - %s$(RESET)\n" $(PERCENTAGE) "$<"
 endef
 
 OBJ= $(SRC:.cpp=.o)
 
 %.o: %.cpp
 	@if [ $(COUNTER) = 0 ]; then printf "\n"; fi
-	@$(CXX) $(CXXFLAGS) -c $< -o $@
-	@$(call update_progress)
+	@$(CXX) $(CXXFLAGS) -c $< -o $@ -g3
+	-@$(call update_progress)
 
 # Individual dependencies
 run: all
